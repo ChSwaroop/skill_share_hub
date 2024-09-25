@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skill_share_hub/colors.dart';
 
 ThemeData theme = ThemeData(
-  textTheme: TextTheme(
+  textTheme: const TextTheme(
     headlineLarge: TextStyle(
       fontSize: 53,
       color: ColorsUtil.secondaryclr,
@@ -42,27 +42,27 @@ ThemeData theme = ThemeData(
     )
   ),
   inputDecorationTheme: InputDecorationTheme(
-    labelStyle: TextStyle(
+    labelStyle: const TextStyle(
       color: ColorsUtil.secondarytxtclr,
       fontSize: 13,
     ),
-    contentPadding: EdgeInsets.only(left: 25 , top: 17 , bottom: 17),
+    contentPadding: const EdgeInsets.only(left: 25 , top: 17 , bottom: 17),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(40),
-      borderSide: BorderSide(color: ColorsUtil.borderclr),
+      borderSide: const BorderSide(color: ColorsUtil.borderclr),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(40),
-      borderSide: BorderSide(color: ColorsUtil.borderclr),
+      borderSide: const BorderSide(color: ColorsUtil.borderclr),
     ),
-    hintStyle: TextStyle(
+    hintStyle: const TextStyle(
       fontSize: 13,
       color: ColorsUtil.secondarytxtclr,
     ),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      fixedSize: Size(160, 50),
+      fixedSize: const Size(160, 50),
       backgroundColor: ColorsUtil.primaryclr,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(40),
@@ -72,10 +72,10 @@ ThemeData theme = ThemeData(
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
       backgroundColor: Colors.white,
-      side: BorderSide(
+      side: const BorderSide(
         color: ColorsUtil.primaryclr,
       ),
-      padding: EdgeInsets.all(0)
+      padding: const EdgeInsets.all(0)
     ),
   
   ),

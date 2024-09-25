@@ -39,14 +39,14 @@ class _ProfileState extends State<Profile> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    icon: Icon(Icons.arrow_back_ios),
+                    icon: const Icon(Icons.arrow_back_ios),
                   ),
                   Row(
                     children: [
-                      // InkWell(
-                      //   child: Image.asset("assets/images/settings.png"),
-                      // ),
-                      SizedBox(width: 7),
+                      InkWell(
+                        child: Image.asset("assets/images/settings.png"),
+                      ),
+                      const SizedBox(width: 7),
                       OutlinedButton(
                         onPressed: () {},
                         child: Text(
@@ -67,7 +67,7 @@ class _ProfileState extends State<Profile> {
                   fit: BoxFit.cover,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 "Veda",
                 style: theme.textTheme.headlineSmall!.copyWith(
@@ -78,7 +78,7 @@ class _ProfileState extends State<Profile> {
                 "Mumbai, India",
                 style: theme.textTheme.bodySmall,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Container(
                 height: 23,
                 width: 39,
@@ -86,11 +86,11 @@ class _ProfileState extends State<Profile> {
                   border: Border.all(color: ColorsUtil.borderclr),
                   borderRadius: BorderRadius.circular(360),
                 ),
-                padding: EdgeInsets.all(3),
+                padding: const EdgeInsets.all(3),
                 child: Center(
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.star,
                         color: Colors.yellow,
                         size: 15,
@@ -107,19 +107,19 @@ class _ProfileState extends State<Profile> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              Divider(
+              const SizedBox(height: 20),
+              const Divider(
                 color: ColorsUtil.borderclr,
               ),
-              SizedBox(height: 25),
+              const SizedBox(height: 25),
               Text(
                 "creative problem-solver with a passion for blending design and technology. Experienced in developing user-friendly apps and commited to enchancing digital experiences with a focus on community impact.",
                 style: theme.textTheme.bodySmall!.copyWith(
-                  color: Color(0xFF1E1E1E),
+                  color: const Color(0xFF1E1E1E),
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 25),
+              const SizedBox(height: 25),
               Container(
                 height: 35,
                 width: 142,
@@ -136,11 +136,11 @@ class _ProfileState extends State<Profile> {
                   ],
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               Row(
                 children: [
                   Image.asset("assets/images/call.png"),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
                     "rhyanronalds@email.com",
                     style: theme.textTheme.bodySmall!
@@ -148,11 +148,11 @@ class _ProfileState extends State<Profile> {
                   ),
                 ],
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Image.asset("assets/images/mail.png"),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
                     "+91 9834928502",
                     style: theme.textTheme.bodySmall!
@@ -160,11 +160,11 @@ class _ProfileState extends State<Profile> {
                   ),
                 ],
               ),
-              SizedBox(height: 24),
-              Divider(
+              const SizedBox(height: 24),
+              const Divider(
                 color: ColorsUtil.borderclr,
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -172,7 +172,7 @@ class _ProfileState extends State<Profile> {
                   custombtn(width, theme, "Resume", () {}),
                 ],
               ),
-              SizedBox(
+              const SizedBox(
                 height: 27,
               ),
               Row(
@@ -180,12 +180,12 @@ class _ProfileState extends State<Profile> {
                 children: [
                   card_custom(
                       theme: theme, heading: "Skills shared", txt: "12"),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   card_custom(
                       theme: theme, heading: "Skills learned", txt: "12"),
                 ],
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -198,7 +198,7 @@ class _ProfileState extends State<Profile> {
                             color: ColorsUtil.thirdtxtclr,
                             fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: List.generate(
@@ -209,12 +209,12 @@ class _ProfileState extends State<Profile> {
                                 Container(
                                   height: 3,
                                   width: 3,
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: ColorsUtil.thirdtxtclr,
                                   ),
                                 ),
-                                SizedBox(width: 5),
+                                const SizedBox(width: 5),
                                 Text(
                                   skills[index],
                                   style: theme.textTheme.bodySmall!
@@ -227,13 +227,13 @@ class _ProfileState extends State<Profile> {
                       ),
                     ],
                   ),
-                  SizedBox(width: 15),
+                  const SizedBox(width: 15),
                   Container(
-                    height: 100,
+                    height: 80,
                     width: 2,
-                    decoration: BoxDecoration(color: ColorsUtil.borderclr),
+                    decoration: const BoxDecoration(color: ColorsUtil.borderclr),
                   ),
-                  SizedBox(width: 15),
+                  const SizedBox(width: 15),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -243,7 +243,7 @@ class _ProfileState extends State<Profile> {
                             color: ColorsUtil.thirdtxtclr,
                             fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: List.generate(
@@ -256,12 +256,12 @@ class _ProfileState extends State<Profile> {
                                     Container(
                                       height: 3,
                                       width: 3,
-                                      decoration: BoxDecoration(
+                                      decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
                                         color: ColorsUtil.thirdtxtclr,
                                       ),
                                     ),
-                                    SizedBox(width: 5),
+                                    const SizedBox(width: 5),
                                     Text(
                                       certifications[index],
                                       style: theme.textTheme.bodySmall!
@@ -270,7 +270,7 @@ class _ProfileState extends State<Profile> {
                                     )
                                   ],
                                 ),
-                                SizedBox(height: 3),
+                                const SizedBox(height: 3),
                               ],
                             );
                           },
@@ -299,7 +299,7 @@ class _ProfileState extends State<Profile> {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                  offset: Offset(1, 1),
+                  offset: const Offset(1, 1),
                   spreadRadius: 2,
                   blurRadius: 7,
                   color: Colors.grey.shade300),

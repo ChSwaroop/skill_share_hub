@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skill_share_hub/colors.dart';
+import 'package:skill_share_hub/views/home_views/home.dart';
 import 'package:skill_share_hub/views/login_views/signup.dart';
 
 class Login extends StatefulWidget {
@@ -18,75 +19,76 @@ class _LoginState extends State<Login> {
         padding: const EdgeInsets.symmetric(horizontal: 35.0),
         child: Column(
           children: [
-            Spacer(),
-            Padding(
-              padding: const EdgeInsets.only(left: 20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    children: [
-                      Text("START", style: theme.textTheme.headlineLarge),
-                    ],
-                  ),
-                  Text(
-                    "UPGRADING",
-                    style: theme.textTheme.headlineLarge!.copyWith(
-                      color: ColorsUtil.primaryclr,
-                      height: 0,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        "YOUR ",
-                        style: theme.textTheme.headlineLarge,
-                      ),
-                      Text(
-                        "SKILLS",
-                        style: theme.textTheme.headlineLarge!.copyWith(
-                          color: ColorsUtil.primaryclr,
-                        ),
-                      )
-                    ],
-                  ),
-                  Text(
-                    "TODAY !",
-                    style: theme.textTheme.headlineLarge,
-                  ),
-                ],
-              ),
-            ),
-            Spacer(),
+            const Spacer(),
+            // Padding(
+            //   padding: const EdgeInsets.only(left: 20.0),
+            //   child: Column(
+            //     crossAxisAlignment: CrossAxisAlignment.center,
+            //     children: [
+            //       Row(
+            //         children: [
+            //           Text("START", style: theme.textTheme.headlineLarge),
+            //         ],
+            //       ),
+            //       Text(
+            //         "UPGRADING",
+            //         style: theme.textTheme.headlineLarge!.copyWith(
+            //           color: ColorsUtil.primaryclr,
+            //           height: 0,
+            //         ),
+            //       ),
+            //       Row(
+            //         children: [
+            //           Text(
+            //             "YOUR ",
+            //             style: theme.textTheme.headlineLarge,
+            //           ),
+            //           Text(
+            //             "SKILLS",
+            //             style: theme.textTheme.headlineLarge!.copyWith(
+            //               color: ColorsUtil.primaryclr,
+            //             ),
+            //           )
+            //         ],
+            //       ),
+            //       Text(
+            //         "TODAY !",
+            //         style: theme.textTheme.headlineLarge,
+            //       ),
+            //     ],
+            //   ),
+            // ),
+            Image.asset("assets/images/main.png"),
+            const Spacer(),
             Text(
               "Login",
               style: theme.textTheme.headlineMedium,
             ),
-            SizedBox(height: 31),
+            const SizedBox(height: 31),
             TextFormField(
               style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
               cursorColor: ColorsUtil.primaryclr,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 label: Text("User name"),
               ),
             ),
-            SizedBox(height: 18),
+            const SizedBox(height: 18),
             TextFormField(
               style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
               cursorColor: ColorsUtil.primaryclr,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 label: Text("Password"),
               ),
             ),
-            SizedBox(height: 9),
+            const SizedBox(height: 9),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Do not have an account?"),
+                const Text("Do not have an account?"),
                 TextButton(
                   onPressed: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => SignUp()));
+                        MaterialPageRoute(builder: (context) => const SignUp()));
                   },
                   child: Text(
                     "SignUp",
@@ -96,17 +98,20 @@ class _LoginState extends State<Login> {
                 ),
               ],
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             ElevatedButton(
               style: theme.elevatedButtonTheme.style,
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const HomeScreen()));
+              },
               child: Text(
                 "Login",
                 style: theme.textTheme.bodyLarge,
               ),
             ),
-            Spacer(),
-            Spacer(),
+            const Spacer(),
+            const Spacer(),
           ],
         ),
       ),

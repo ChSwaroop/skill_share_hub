@@ -38,7 +38,7 @@ class _SignUpState extends State<SignUp> {
             onChanged: (value) {
               newSkill = value;
             },
-            style: TextStyle(color: Colors.black),
+            style: const TextStyle(color: Colors.black),
             cursorColor: ColorsUtil.primaryclr,
             decoration: InputDecoration(
                 hintText:
@@ -46,7 +46,7 @@ class _SignUpState extends State<SignUp> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text(
+              child: const Text(
                 "Cancel",
                 style: TextStyle(
                   color: Colors.black,
@@ -57,7 +57,7 @@ class _SignUpState extends State<SignUp> {
               },
             ),
             TextButton(
-              child: Text(
+              child: const Text(
                 "Add",
                 style: TextStyle(
                   color: Colors.black,
@@ -66,10 +66,11 @@ class _SignUpState extends State<SignUp> {
               onPressed: () {
                 if (newSkill.isNotEmpty) {
                   setState(() {
-                    if (flag == 0)
+                    if (flag == 0) {
                       skills.add(newSkill);
-                    else
+                    } else {
                       certifications.add(newSkill);
+                    }
                   });
                 }
                 Navigator.of(context).pop();
@@ -103,7 +104,7 @@ class _SignUpState extends State<SignUp> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 children: [
                   IconButton(
@@ -116,11 +117,11 @@ class _SignUpState extends State<SignUp> {
                         Navigator.pop(context);
                       }
                     },
-                    icon: Icon(Icons.arrow_back_ios),
+                    icon: const Icon(Icons.arrow_back_ios),
                   ),
                 ],
               ),
-              SizedBox(height: 26),
+              const SizedBox(height: 26),
               Container(
                 height: 10,
                 width: width / 2,
@@ -141,7 +142,7 @@ class _SignUpState extends State<SignUp> {
                   ],
                 ),
               ),
-              SizedBox(height: 37),
+              const SizedBox(height: 37),
               Text(
                 "SignUp",
                 style: theme.textTheme.headlineMedium,
@@ -150,7 +151,7 @@ class _SignUpState extends State<SignUp> {
                 "PERSONAL INFO",
                 style: theme.textTheme.bodyMedium,
               ),
-              SizedBox(height: 55),
+              const SizedBox(height: 55),
               screens[pageNumber]
               // Spacer(),
             ],
@@ -203,7 +204,7 @@ class _SignUpState extends State<SignUp> {
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(25),
               border: Border.all(color: ColorsUtil.borderclr)),
-          padding: EdgeInsets.all(30),
+          padding: const EdgeInsets.all(30),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -212,7 +213,7 @@ class _SignUpState extends State<SignUp> {
                 runSpacing: 4.0, // gap between lines
                 children: skills.map((skill) {
                   return Chip(
-                    side: BorderSide(color: Colors.transparent),
+                    side: const BorderSide(color: Colors.transparent),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30)),
                     label: Text(skill),
@@ -222,7 +223,7 @@ class _SignUpState extends State<SignUp> {
                       decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.5)),
-                      child: Icon(
+                      child: const Icon(
                         Icons.close,
                         size: 10,
                         color: ColorsUtil.btntxtclr,
@@ -234,11 +235,11 @@ class _SignUpState extends State<SignUp> {
                       });
                     },
                     backgroundColor: ColorsUtil.cardclr,
-                    labelStyle: TextStyle(color: Colors.white),
+                    labelStyle: const TextStyle(color: Colors.white),
                   );
                 }).toList(),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -257,7 +258,7 @@ class _SignUpState extends State<SignUp> {
             ],
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Row(
           children: [
             Text(
@@ -272,7 +273,7 @@ class _SignUpState extends State<SignUp> {
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(25),
               border: Border.all(color: ColorsUtil.borderclr)),
-          padding: EdgeInsets.all(30),
+          padding: const EdgeInsets.all(30),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -281,7 +282,7 @@ class _SignUpState extends State<SignUp> {
                 runSpacing: 4.0, // gap between lines
                 children: certifications.map((skill) {
                   return Chip(
-                    side: BorderSide(color: Colors.transparent),
+                    side: const BorderSide(color: Colors.transparent),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30)),
                     label: Text(skill),
@@ -291,7 +292,7 @@ class _SignUpState extends State<SignUp> {
                       decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.5)),
-                      child: Icon(
+                      child: const Icon(
                         Icons.close,
                         size: 10,
                         color: ColorsUtil.btntxtclr,
@@ -303,11 +304,11 @@ class _SignUpState extends State<SignUp> {
                       });
                     },
                     backgroundColor: ColorsUtil.cardclr,
-                    labelStyle: TextStyle(color: Colors.white),
+                    labelStyle: const TextStyle(color: Colors.white),
                   );
                 }).toList(),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -326,19 +327,19 @@ class _SignUpState extends State<SignUp> {
             ],
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("Portifolio website"),
           ),
         ),
-        SizedBox(height: 35),
+        const SizedBox(height: 35),
         ElevatedButton(
           onPressed: () {
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => HomeScreen()));
+                context, MaterialPageRoute(builder: (context) => const HomeScreen()));
           },
           child: Text(
             "Next",
@@ -346,7 +347,7 @@ class _SignUpState extends State<SignUp> {
                 .copyWith(color: ColorsUtil.btntxtclr),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
       ],
     );
   }
@@ -356,68 +357,68 @@ class _SignUpState extends State<SignUp> {
       children: [
         TextFormField(style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("Occupation"),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("Company"),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("Education"),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             SizedBox(
               width: width / 4,
               child: TextFormField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: "Start year",
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             SizedBox(
               width: width / 4,
               child: TextFormField(
                 style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   label: Text("End year"),
                 ),
               ),
             ),
           ],
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("Work experience"),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("Internship experience"),
           ),
         ),
-        SizedBox(height: 50),
+        const SizedBox(height: 50),
         ElevatedButton(
           onPressed: () {
             setState(() {
@@ -440,35 +441,35 @@ class _SignUpState extends State<SignUp> {
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("Email"),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("Phone Number"),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("New Password"),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("Confirm password"),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -483,7 +484,7 @@ class _SignUpState extends State<SignUp> {
             )
           ],
         ),
-        SizedBox(height: 50),
+        const SizedBox(height: 50),
         ElevatedButton(
           onPressed: () {
             setState(() {
@@ -506,19 +507,19 @@ class _SignUpState extends State<SignUp> {
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("First name"),
           ),
         ),
-        SizedBox(height: 30),
+        const SizedBox(height: 30),
         TextFormField(
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             label: Text("Last Name"),
           ),
         ),
-        SizedBox(height: 30),
+        const SizedBox(height: 30),
         SizedBox(
           width: width,
           child: Row(
@@ -529,7 +530,7 @@ class _SignUpState extends State<SignUp> {
                 child: TextFormField(
                   style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     label: Text("DD"),
                   ),
                 ),
@@ -540,7 +541,7 @@ class _SignUpState extends State<SignUp> {
                   style:
                       theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
                   cursorColor: ColorsUtil.primaryclr,
-                  decoration: InputDecoration(label: Text("MM")),
+                  decoration: const InputDecoration(label: Text("MM")),
                 ),
               ),
               SizedBox(
@@ -548,13 +549,13 @@ class _SignUpState extends State<SignUp> {
                 child: TextFormField(
                   style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-                  decoration: InputDecoration(label: Text("YYYY")),
+                  decoration: const InputDecoration(label: Text("YYYY")),
                 ),
               )
             ],
           ),
         ),
-        SizedBox(height: 30),
+        const SizedBox(height: 30),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -572,7 +573,7 @@ class _SignUpState extends State<SignUp> {
                 ),
               ),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Container(
               height: 50,
               width: 100,
@@ -586,7 +587,7 @@ class _SignUpState extends State<SignUp> {
             ),
           ],
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -602,7 +603,7 @@ class _SignUpState extends State<SignUp> {
           ],
         ),
         // Spacer(),
-        SizedBox(height: 50),
+        const SizedBox(height: 50),
         ElevatedButton(
           onPressed: () {
             setState(() {

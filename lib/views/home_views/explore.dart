@@ -1,23 +1,17 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:skill_share_hub/colors.dart';
-import 'package:skill_share_hub/views/home_views/chart.dart';
-import 'package:skill_share_hub/views/home_views/chat_bot.dart';
-import 'package:skill_share_hub/views/home_views/chat_menu.dart';
-import 'package:skill_share_hub/views/home_views/explore.dart';
-import 'package:skill_share_hub/views/home_views/profile.dart';
-import 'package:skill_share_hub/views/home_views/todo.dart';
-import 'package:skill_share_hub/views/util/custom_card.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class Explore extends StatefulWidget {
+  const Explore({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<Explore> createState() => _ExploreState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _ExploreState extends State<Explore> {
   int curCardIndex = 0;
+  int curCardIndex2 = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -28,230 +22,51 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: ColorsUtil.bgclr,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 35.0, vertical: 50),
+        padding: const EdgeInsets.symmetric(horizontal: 31.0, vertical: 40),
         child: SingleChildScrollView(
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    child: Image.asset("assets/images/icon.png"),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.arrow_back_ios),
                   ),
-                  Row(
-                    children: [
-                      InkWell(
-                        onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const Profile()));
-                      },
-                        child: Container(
-                          height: 30,
-                          width: 30,
-                          child: Image.asset("assets/images/profile-pic1.png"),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      InkWell(
-                        onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const Chatbot()));
-                      },
-                        child: Container(
-                          child: Image.asset("assets/images/chatbot.png"),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      InkWell(
-                        onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const ToDo()));
-                        },
-                        child: Container(
-                          child: Image.asset("assets/images/check.png"),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      InkWell(
-                        onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatMenu()));
-                        },
-                        child: Container(
-                          child: Image.asset("assets/images/notifications.png"),
-                        ),
-                      )
-                    ],
-                  )
+                  Image.asset("assets/images/icon.png"),
+                  Image.asset("assets/images/profile-pic1.png"),
                 ],
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 25),
               TextFormField(
                 style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+                decoration: const InputDecoration(hintText: "search for a person..."),
                 cursorColor: ColorsUtil.primaryclr,
-                decoration:
-                    const InputDecoration(hintText: "Search for a skill to learn..."),
               ),
-              const SizedBox(height: 30),
-              Row(
+              const SizedBox(height: 25),
+              const Row(
                 children: [
-                  Text(
-                    "Hi, Rishika!",
-                    style: theme.textTheme.headlineSmall,
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Text(
-                    "Let's help each other by ",
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  Text("sharing ",
-                      style: theme.textTheme.bodySmall!
-                          .copyWith(color: ColorsUtil.primaryclr)),
-                  Text("and ", style: theme.textTheme.bodySmall),
-                  Text("swapping",
-                      style: theme.textTheme.bodySmall!.copyWith(
-                        color: ColorsUtil.primaryclr,
-                      )),
-                ],
-              ),
-              const SizedBox(height: 30),
-              Row(
-                children: [
-                  Text(
-                    "Continue Learning",
-                    style: theme.textTheme.bodyMedium!
-                        .copyWith(color: ColorsUtil.textclr),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
-              Container(
-                height: 80,
-                width: width,
-                padding: const EdgeInsets.all(15),
-                margin: const EdgeInsets.symmetric(horizontal: 5),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                          offset: const Offset(1, 1),
-                          spreadRadius: 3,
-                          blurRadius: 5,
-                          color: Colors.grey.shade300)
-                    ]),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Image.asset("assets/images/profile-pic1.png"),
-                    Text(
-                      "MongoDB",
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    Image.asset("assets/images/sync.png"),
-                    Text(
-                      "JavaScript",
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    Image.asset("assets/images/profile-pic2.png"),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 35),
-              Container(
-                height: 170,
-                width: width,
-                padding: const EdgeInsets.all(25),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  image: const DecorationImage(
-                      opacity: 0.3,
-                      image: AssetImage("assets/images/hero.png")),
-                  gradient: const LinearGradient(
-                    begin: Alignment.bottomLeft,
-                    end: Alignment.topRight,
-                    colors: [
-                      Color(0XFF1FA0D7),
-                      Color(0xFFB2CDFF),
-                    ],
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      "Lets help each other by sharing your skills and got benefited by getting their skills. Just start now !",
-                      style: theme.textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const Spacer(),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        fixedSize: const Size(130, 30),
-                      ),
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const Explore()));
-                      },
-                      child: Text(
-                        "Explore now !",
-                        style: theme.textTheme.titleMedium,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 50),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  card_custom(
-                    theme: theme,
-                    heading: "Skills shared & learned",
-                    txt: "12",
-                  ),
-                  const SizedBox(width: 15),
-                  Container(
-                    height: 90,
-                    width: 130,
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: const Color(0xFFFFECA7),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          "Tasks Today",
-                          style: theme.textTheme.bodyMedium!
-                              .copyWith(color: ColorsUtil.textclr),
-                        ),
-                        Text(
-                          "03",
-                          style: theme.textTheme.headlineMedium!.copyWith(
-                              fontSize: 40, color: ColorsUtil.textclr),
-                        )
-                      ],
-                    ),
+                  Icon(
+                    Icons.filter_alt_rounded,
+                    color: ColorsUtil.primaryclr,
                   )
                 ],
               ),
-              const SizedBox(height: 20),
-              // SizedBox(
-              //   height: 120,
-              //   width: width - 100,
-              //   child: LineChartSample(),
-              // ),
-              Image.asset("assets/images/graph.png"),
-              const SizedBox(height: 60),
-              Row(
-                children: [
-                  Text(
-                    "Recommended for you",
-                    style: theme.textTheme.bodyMedium!.copyWith(
-                        color: ColorsUtil.textclr, fontWeight: FontWeight.bold),
-                  ),
-                ],
+              const SizedBox(
+                height: 40,
               ),
-              const SizedBox(height: 15),
+              Text(
+                "Most popular people to connect!",
+                style: theme.textTheme.bodyMedium!.copyWith(
+                  color: const Color(0xFF3D3D3D),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              details_card(width, theme),
+              const SizedBox(height: 44),
               details_card(width, theme),
             ],
           ),

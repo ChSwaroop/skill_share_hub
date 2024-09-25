@@ -18,13 +18,13 @@ class card_custom extends StatelessWidget {
     return Container(
       height: 90,
       width: 90,
-      padding: EdgeInsets.all(15),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Color(0xFFFFE1E4),
+        color: const Color(0xFFFFE1E4),
         boxShadow: [
           BoxShadow(
-            offset: Offset(1, 1),
+            offset: const Offset(1, 1),
             spreadRadius: 1,
             blurRadius: 10,
             color: Colors.grey.shade200

@@ -10,12 +10,12 @@ class LineChartSample extends StatelessWidget {
         lineBarsData: [
           LineChartBarData(
             spots: [
-              FlSpot(0, 1),
-              FlSpot(1, 2),
-              FlSpot(2, 1.5),
-              FlSpot(3, 3),
-              FlSpot(4, 2.8),
-              FlSpot(5, 3.5),
+              const FlSpot(0, 1),
+              const FlSpot(1, 2),
+              const FlSpot(2, 1.5),
+              const FlSpot(3, 3),
+              const FlSpot(4, 2.8),
+              const FlSpot(5, 3.5),
             ],
             isCurved: true, // Optional: To create a smooth curve
             colors: [Colors.yellow],
