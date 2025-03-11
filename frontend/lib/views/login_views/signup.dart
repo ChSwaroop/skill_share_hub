@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:skill_share_hub/colors.dart';
+import 'package:skill_share_hub/repo/auth.dart';
 import 'package:skill_share_hub/views/home_views/home.dart';
 
 class SignUp extends StatefulWidget {
@@ -11,21 +13,90 @@ class SignUp extends StatefulWidget {
 
 class _SignUpState extends State<SignUp> {
   int pageNumber = 0;
-  List<String> skills = [
-    'Web Development',
-    'UI / UX',
-    'Html / CSS',
-    'JavaScript',
-    'React Native'
-  ];
-  List<String> certifications = [
-    'Web Development',
-    'UI / UX',
-    'Html / CSS',
-    'JavaScript',
-    'React Native'
-  ];
+  // List<String> skills = [
+  //   'Web Development',
+  //   'UI / UX',
+  //   'Html / CSS',
+  //   'JavaScript',
+  //   'React Native'
+  // ];
+  // List<String> certifications = [
+  //   'Web Development',
+  //   'UI / UX',
+  //   'Html / CSS',
+  //   'JavaScript',
+  //   'React Native'
+  // ];
+  final _formKey = GlobalKey<FormState>();
 
+  // Controllers for text fields
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final dayController = TextEditingController();
+  final monthController = TextEditingController();
+  final yearController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final TextEditingController _occupationController = TextEditingController();
+  final TextEditingController _companyController = TextEditingController();
+  final TextEditingController _educationController = TextEditingController();
+  final TextEditingController _startYearController = TextEditingController();
+  final TextEditingController _endYearController = TextEditingController();
+  final TextEditingController _workExpController = TextEditingController();
+  final TextEditingController _internshipExpController =
+      TextEditingController();
+  final TextEditingController _portfolioController = TextEditingController();
+  List<String> skills = [];
+  List<String> certifications = [];
+  final apiRepo = AuthRepo();
+
+  Future<void> _showAddItemDialog(int type) async {
+    TextEditingController controller = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(type == 0 ? "Add Skill" : "Add Certification"),
+        content: TextField(controller: controller),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                if (controller.text.isNotEmpty) {
+                  type == 0
+                      ? skills.add(controller.text)
+                      : certifications.add(controller.text);
+                }
+              });
+              Navigator.pop(context);
+            },
+            child: const Text("Add"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _occupationController.dispose();
+    _companyController.dispose();
+    _educationController.dispose();
+    _startYearController.dispose();
+    _endYearController.dispose();
+    _workExpController.dispose();
+    _internshipExpController.dispose();
+    _portfolioController.dispose();
+    super.dispose();
+  }
+
+  // Gender selection state
+  bool isMale = true;
   // Function to show dialog and get input from user
   Future<void> _showAddSkillDialog(int flag) async {
     String newSkill = '';
@@ -96,65 +167,68 @@ class _SignUpState extends State<SignUp> {
     ];
 
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 40.0,
-          vertical: 20,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      if (pageNumber > 0) {
-                        setState(() {
-                          pageNumber--;
-                        });
-                      } else {
-                        Navigator.pop(context);
-                      }
-                    },
-                    icon: const Icon(Icons.arrow_back_ios),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 26),
-              Container(
-                height: 10,
-                width: width / 2,
-                decoration: BoxDecoration(
-                  color: ColorsUtil.barclr,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
+      body: Form(
+        key: _formKey,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 40.0,
+            vertical: 20,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                Row(
                   children: [
-                    Container(
-                      height: 10,
-                      width: (pageNumber + 1) * ((width / 2) / 4),
-                      decoration: BoxDecoration(
-                        color: ColorsUtil.primaryclr,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                    IconButton(
+                      onPressed: () {
+                        if (pageNumber > 0) {
+                          setState(() {
+                            pageNumber--;
+                          });
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_back_ios),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 37),
-              Text(
-                "SignUp",
-                style: theme.textTheme.headlineMedium,
-              ),
-              Text(
-                "PERSONAL INFO",
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 55),
-              screens[pageNumber]
-              // Spacer(),
-            ],
+                const SizedBox(height: 26),
+                Container(
+                  height: 10,
+                  width: width / 2,
+                  decoration: BoxDecoration(
+                    color: ColorsUtil.barclr,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 10,
+                        width: (pageNumber + 1) * ((width / 2) / 4),
+                        decoration: BoxDecoration(
+                          color: ColorsUtil.primaryclr,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 37),
+                Text(
+                  "SignUp",
+                  style: theme.textTheme.headlineMedium,
+                ),
+                Text(
+                  "PERSONAL INFO",
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 55),
+                screens[pageNumber]
+                // Spacer(),
+              ],
+            ),
           ),
         ),
       ),
@@ -164,96 +238,41 @@ class _SignUpState extends State<SignUp> {
   Column Details_four(ThemeData theme, double width, BuildContext context) {
     return Column(
       children: [
-        // Stack(
-        //   alignment: Alignment(-0.8, -1.1),
-        //   children: [
-        //     Container(
-        //       height: 30,
-        //       width: 100,
-        //       decoration: BoxDecoration(color: Colors.white),
-        //       child: Container(
-        //         height: 30,
-        //         width: 50,
-        //         decoration: BoxDecoration(
-        //           color: Colors.white,
-        //         ),
-        //         child: Text("skills"),
-        //       ),
-        //     ),
-        //     Container(
-        //       height: height / 5,
-        //       width: width,
-        //       decoration: BoxDecoration(
-        //           borderRadius: BorderRadius.circular(25),
-        //           border: Border.all(color: ColorsUtil.borderclr)),
-        //     ),
-        //   ],
-        // ),
-        // SizedBox(height: 20),
         Row(
           children: [
-            Text(
-              "skills",
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text("Skills", style: theme.textTheme.bodyMedium),
           ],
         ),
         Container(
-          // height: height / 4,
           width: width,
           decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: ColorsUtil.borderclr)),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: ColorsUtil.borderclr),
+          ),
           padding: const EdgeInsets.all(30),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Wrap(
-                spacing: 8.0, // gap between adjacent chips
-                runSpacing: 4.0, // gap between lines
-                children: skills.map((skill) {
-                  return Chip(
-                    side: const BorderSide(color: Colors.transparent),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30)),
-                    label: Text(skill),
-                    deleteIcon: Container(
-                      height: 15,
-                      width: 15,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.5)),
-                      child: const Icon(
-                        Icons.close,
-                        size: 10,
-                        color: ColorsUtil.btntxtclr,
-                      ),
-                    ),
-                    onDeleted: () {
-                      setState(() {
-                        skills.remove(skill);
-                      });
-                    },
-                    backgroundColor: ColorsUtil.cardclr,
-                    labelStyle: const TextStyle(color: Colors.white),
-                  );
-                }).toList(),
+                spacing: 8.0,
+                runSpacing: 4.0,
+                children: skills
+                    .map((skill) => Chip(
+                          label: Text(skill),
+                          onDeleted: () => setState(() => skills.remove(skill)),
+                          backgroundColor: ColorsUtil.cardclr,
+                          labelStyle: const TextStyle(color: Colors.white),
+                        ))
+                    .toList(),
               ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () async {
-                      await _showAddSkillDialog(0);
-                    },
-                    child: Text(
-                      "+ Add skill",
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => _showAddItemDialog(0),
+                  child: Text("+ Add skill",
                       style: theme.textTheme.bodyMedium!
-                          .copyWith(color: Colors.black),
-                    ),
-                  ),
-                ],
+                          .copyWith(color: Colors.black)),
+                ),
               ),
             ],
           ),
@@ -261,85 +280,99 @@ class _SignUpState extends State<SignUp> {
         const SizedBox(height: 20),
         Row(
           children: [
-            Text(
-              "certifications",
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text("Certifications", style: theme.textTheme.bodyMedium),
           ],
         ),
         Container(
-          // height: height / 4,
           width: width,
           decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: ColorsUtil.borderclr)),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: ColorsUtil.borderclr),
+          ),
           padding: const EdgeInsets.all(30),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Wrap(
-                spacing: 8.0, // gap between adjacent chips
-                runSpacing: 4.0, // gap between lines
-                children: certifications.map((skill) {
-                  return Chip(
-                    side: const BorderSide(color: Colors.transparent),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30)),
-                    label: Text(skill),
-                    deleteIcon: Container(
-                      height: 15,
-                      width: 15,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.5)),
-                      child: const Icon(
-                        Icons.close,
-                        size: 10,
-                        color: ColorsUtil.btntxtclr,
-                      ),
-                    ),
-                    onDeleted: () {
-                      setState(() {
-                        certifications.remove(skill);
-                      });
-                    },
-                    backgroundColor: ColorsUtil.cardclr,
-                    labelStyle: const TextStyle(color: Colors.white),
-                  );
-                }).toList(),
+                spacing: 8.0,
+                runSpacing: 4.0,
+                children: certifications
+                    .map((cert) => Chip(
+                          label: Text(cert),
+                          onDeleted: () =>
+                              setState(() => certifications.remove(cert)),
+                          backgroundColor: ColorsUtil.cardclr,
+                          labelStyle: const TextStyle(color: Colors.white),
+                        ))
+                    .toList(),
               ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () async {
-                      await _showAddSkillDialog(1);
-                    },
-                    child: Text(
-                      "+ Add certification",
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => _showAddItemDialog(1),
+                  child: Text("+ Add certification",
                       style: theme.textTheme.bodyMedium!
-                          .copyWith(color: Colors.black),
-                    ),
-                  ),
-                ],
+                          .copyWith(color: Colors.black)),
+                ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 20),
         TextFormField(
+          controller: _portfolioController,
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(
-            label: Text("Portifolio website"),
-          ),
+          decoration: const InputDecoration(labelText: "Portfolio website"),
+          // validator: (value) => value == null || value.isEmpty
+          //     ? 'Portfolio website is required'
+          //     : null,
         ),
         const SizedBox(height: 35),
         ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              try {
+                final response = await apiRepo.registerUser(
+                  firstName: firstNameController.text.trim(),
+                  lastName: lastNameController.text.trim(),
+                  dateOfBirth:
+                      "${dayController.text.trim()}-${monthController.text.trim()}-${yearController.text.trim()}",
+                  gender: "Male", // Adjust based on actual gender selection
+                  email: emailController.text.trim(),
+                  phoneNumber: phoneController.text.trim(),
+                  occupation: _occupationController.text.trim(),
+                  company: _companyController.text.trim(),
+                  education: _educationController.text.trim(),
+                  workExperience: _workExpController.text.trim(),
+                  internshipExperience: _internshipExpController.text.trim(),
+                  skills: List.from(skills),
+                  certifications: List.from(certifications),
+                  password: passwordController.text.trim(),
+                  startYear: _startYearController.text.trim(),
+                  endYear: _endYearController.text.trim(),
+                );
+
+                if (response['success']) {
+                  // Registration successful, navigate to HomeScreen
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  );
+                } else {
+                  // Show error message from response
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(response['message'] ??
+                            "Registration failed. Try again.")),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.toString())),
+                );
+              }
+            }
           },
           child: Text(
             "Next",
@@ -350,32 +383,38 @@ class _SignUpState extends State<SignUp> {
         const SizedBox(height: 20),
       ],
     );
+    // );
   }
 
   Column Details_three(double width, ThemeData theme) {
     return Column(
       children: [
-        TextFormField(style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+        TextFormField(
+          controller: _occupationController,
+          style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(
-            label: Text("Occupation"),
-          ),
+          decoration: const InputDecoration(labelText: "Occupation"),
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Occupation is required' : null,
         ),
         const SizedBox(height: 20),
         TextFormField(
+          controller: _companyController,
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(
-            label: Text("Company"),
-          ),
+          decoration: const InputDecoration(labelText: "Company"),
+          validator: (value) => value == null || value.isEmpty
+              ? 'Company name is required'
+              : null,
         ),
         const SizedBox(height: 20),
         TextFormField(
+          controller: _educationController,
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(
-            label: Text("Education"),
-          ),
+          decoration: const InputDecoration(labelText: "Education"),
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Education is required' : null,
         ),
         const SizedBox(height: 20),
         Row(
@@ -384,46 +423,52 @@ class _SignUpState extends State<SignUp> {
             SizedBox(
               width: width / 4,
               child: TextFormField(
-                decoration: const InputDecoration(
-                  hintText: "Start year",
-                ),
+                controller: _startYearController,
+                keyboardType: TextInputType.number,
+                style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+                decoration: const InputDecoration(hintText: "Start year"),
+                cursorColor: ColorsUtil.primaryclr,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Start year required'
+                    : null,
               ),
             ),
-            const SizedBox(height: 20),
             SizedBox(
               width: width / 4,
               child: TextFormField(
+                controller: _endYearController,
+                keyboardType: TextInputType.number,
                 style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
-          cursorColor: ColorsUtil.primaryclr,
-                decoration: const InputDecoration(
-                  label: Text("End year"),
-                ),
+                cursorColor: ColorsUtil.primaryclr,
+                decoration: const InputDecoration(labelText: "End year"),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'End year required' : null,
               ),
             ),
           ],
         ),
         const SizedBox(height: 20),
         TextFormField(
+          controller: _workExpController,
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(
-            label: Text("Work experience"),
-          ),
+          decoration: const InputDecoration(labelText: "Work experience"),
         ),
         const SizedBox(height: 20),
         TextFormField(
+          controller: _internshipExpController,
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(
-            label: Text("Internship experience"),
-          ),
+          decoration: const InputDecoration(labelText: "Internship experience"),
         ),
         const SizedBox(height: 50),
         ElevatedButton(
           onPressed: () {
-            setState(() {
-              pageNumber++;
-            });
+            if (_formKey.currentState!.validate()) {
+              setState(() {
+                pageNumber++;
+              });
+            }
           },
           child: Text(
             "Next",
@@ -436,38 +481,99 @@ class _SignUpState extends State<SignUp> {
   }
 
   Column Details_two(ThemeData theme) {
+    // Controllers for form fields
+    // final emailController = TextEditingController();
+    // final phoneController = TextEditingController();
+    // final passwordController = TextEditingController();
+    // final confirmPasswordController = TextEditingController();
+
+    // // Form key for validation
+    // final _formKey = GlobalKey<FormState>();
+
     return Column(
       children: [
-        TextFormField(
-          style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
-          cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(
-            label: Text("Email"),
-          ),
-        ),
-        const SizedBox(height: 20),
-        TextFormField(
-          style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
-          cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(
-            label: Text("Phone Number"),
-          ),
-        ),
-        const SizedBox(height: 20),
-        TextFormField(
-          style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
-          cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(
-            label: Text("New Password"),
-          ),
-        ),
-        const SizedBox(height: 20),
-        TextFormField(
-          style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
-          cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(
-            label: Text("Confirm password"),
-          ),
+        Column(
+          children: [
+            TextFormField(
+              controller: emailController,
+              style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+              cursorColor: ColorsUtil.primaryclr,
+              decoration: const InputDecoration(
+                label: Text("Email"),
+              ),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                // Email format validation using regex
+                final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                if (!emailRegex.hasMatch(value)) {
+                  return 'Please enter a valid email address';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: phoneController,
+              style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+              cursorColor: ColorsUtil.primaryclr,
+              decoration: const InputDecoration(
+                label: Text("Phone Number"),
+              ),
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your phone number';
+                }
+                // Basic phone number validation
+                final phoneRegex = RegExp(r'^\d{10,15}$');
+                if (!phoneRegex.hasMatch(value.replaceAll(RegExp(r'\D'), ''))) {
+                  return 'Please enter a valid phone number';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: passwordController,
+              style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+              cursorColor: ColorsUtil.primaryclr,
+              decoration: const InputDecoration(
+                label: Text("New Password"),
+              ),
+              obscureText: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a password';
+                }
+                if (value.length < 8) {
+                  return 'Password must be at least 8 characters';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: confirmPasswordController,
+              style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+              cursorColor: ColorsUtil.primaryclr,
+              decoration: const InputDecoration(
+                label: Text("Confirm password"),
+              ),
+              obscureText: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please confirm your password';
+                }
+                if (value != passwordController.text) {
+                  return 'Passwords do not match';
+                }
+                return null;
+              },
+            ),
+          ],
         ),
         const SizedBox(height: 20),
         Row(
@@ -477,19 +583,28 @@ class _SignUpState extends State<SignUp> {
               "Already have an account? ",
               style: theme.textTheme.bodyMedium,
             ),
-            Text(
-              "Login",
-              style: theme.textTheme.bodyMedium!
-                  .copyWith(color: ColorsUtil.primaryclr),
-            )
+            GestureDetector(
+              onTap: () {
+                // Navigate to login page
+                // Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
+              },
+              child: Text(
+                "Login",
+                style: theme.textTheme.bodyMedium!
+                    .copyWith(color: ColorsUtil.primaryclr),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 50),
         ElevatedButton(
           onPressed: () {
-            setState(() {
-              pageNumber++;
-            });
+            if (_formKey.currentState!.validate()) {
+              // All form fields are valid, proceed to next page
+              setState(() {
+                pageNumber++;
+              });
+            }
           },
           child: Text(
             "Next",
@@ -501,22 +616,87 @@ class _SignUpState extends State<SignUp> {
     );
   }
 
-  Column Details_one(double width, ThemeData theme) {
+  Widget Details_one(double width, ThemeData theme) {
+    // Form key for validation
+    // final _formKey = GlobalKey<FormState>();
+
+    // // Controllers for text fields
+    // final firstNameController = TextEditingController();
+    // final lastNameController = TextEditingController();
+    // final dayController = TextEditingController();
+    // final monthController = TextEditingController();
+    // final yearController = TextEditingController();
+
+    // Gender selection state
+    bool isMale = true;
+
+    // Validators
+    String? validateName(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'This field is required';
+      }
+      // Check if name contains only letters
+      if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(value)) {
+        return 'Please enter valid name';
+      }
+      return null;
+    }
+
+    String? validateDay(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'Required';
+      }
+      final day = int.tryParse(value);
+      if (day == null || day < 1 || day > 31) {
+        return 'Invalid';
+      }
+      return null;
+    }
+
+    String? validateMonth(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'Required';
+      }
+      final month = int.tryParse(value);
+      if (month == null || month < 1 || month > 12) {
+        return 'Invalid';
+      }
+      return null;
+    }
+
+    String? validateYear(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'Required';
+      }
+      final year = int.tryParse(value);
+      final currentYear = DateTime.now().year;
+      if (year == null || year < 1900 || year > currentYear) {
+        return 'Invalid';
+      }
+      return null;
+    }
+
     return Column(
       children: [
         TextFormField(
+          controller: firstNameController,
+          validator: validateName,
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
           decoration: const InputDecoration(
             label: Text("First name"),
+            errorMaxLines: 1,
           ),
         ),
         const SizedBox(height: 30),
         TextFormField(
+          controller: lastNameController,
+          validator: validateName,
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
           decoration: const InputDecoration(
             label: Text("Last Name"),
+            errorMaxLines: 1,
           ),
         ),
         const SizedBox(height: 30),
@@ -528,28 +708,58 @@ class _SignUpState extends State<SignUp> {
               SizedBox(
                 width: width / 4,
                 child: TextFormField(
-                  style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
-          cursorColor: ColorsUtil.primaryclr,
+                  controller: dayController,
+                  validator: validateDay,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(2),
+                  ],
+                  style:
+                      theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+                  cursorColor: ColorsUtil.primaryclr,
                   decoration: const InputDecoration(
                     label: Text("DD"),
+                    errorMaxLines: 1,
                   ),
                 ),
               ),
               SizedBox(
                 width: width / 4,
                 child: TextFormField(
+                  controller: monthController,
+                  validator: validateMonth,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(2),
+                  ],
                   style:
                       theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
                   cursorColor: ColorsUtil.primaryclr,
-                  decoration: const InputDecoration(label: Text("MM")),
+                  decoration: const InputDecoration(
+                    label: Text("MM"),
+                    errorMaxLines: 1,
+                  ),
                 ),
               ),
               SizedBox(
                 width: width / 4,
                 child: TextFormField(
-                  style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
-          cursorColor: ColorsUtil.primaryclr,
-                  decoration: const InputDecoration(label: Text("YYYY")),
+                  controller: yearController,
+                  validator: validateYear,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(4),
+                  ],
+                  style:
+                      theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+                  cursorColor: ColorsUtil.primaryclr,
+                  decoration: const InputDecoration(
+                    label: Text("YYYY"),
+                    errorMaxLines: 1,
+                  ),
                 ),
               )
             ],
@@ -559,30 +769,59 @@ class _SignUpState extends State<SignUp> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              height: 50,
-              width: 100,
-              decoration: BoxDecoration(
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  isMale = true;
+                });
+              },
+              child: Container(
+                height: 50,
+                width: 100,
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(40),
-                  color: ColorsUtil.primaryclr),
-              child: Center(
-                child: Text(
-                  "Male",
-                  style: theme.textTheme.bodyMedium!
-                      .copyWith(color: ColorsUtil.btntxtclr),
+                  color: isMale ? ColorsUtil.primaryclr : Colors.transparent,
+                  border:
+                      isMale ? null : Border.all(color: ColorsUtil.borderclr),
+                ),
+                child: Center(
+                  child: Text(
+                    "Male",
+                    style: theme.textTheme.bodyMedium!.copyWith(
+                      color: isMale
+                          ? ColorsUtil.btntxtclr
+                          : theme.textTheme.bodyMedium!.color,
+                    ),
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 10),
-            Container(
-              height: 50,
-              width: 100,
-              decoration: BoxDecoration(
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  isMale = false;
+                });
+              },
+              child: Container(
+                height: 50,
+                width: 100,
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(40),
-                  // color: ColorsUtil.tra
-                  border: Border.all(color: ColorsUtil.borderclr)),
-              child: Center(
-                child: Text("Female", style: theme.textTheme.bodyMedium),
+                  color: !isMale ? ColorsUtil.primaryclr : Colors.transparent,
+                  border:
+                      !isMale ? null : Border.all(color: ColorsUtil.borderclr),
+                ),
+                child: Center(
+                  child: Text(
+                    "Female",
+                    style: theme.textTheme.bodyMedium!.copyWith(
+                      color: !isMale
+                          ? ColorsUtil.btntxtclr
+                          : theme.textTheme.bodyMedium!.color,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -595,20 +834,40 @@ class _SignUpState extends State<SignUp> {
               "Already have an account? ",
               style: theme.textTheme.bodyMedium,
             ),
-            Text(
-              "Login",
-              style: theme.textTheme.bodyMedium!
-                  .copyWith(color: ColorsUtil.primaryclr),
+            GestureDetector(
+              onTap: () {
+                // Navigate to login screen
+                // Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+              },
+              child: Text(
+                "Login",
+                style: theme.textTheme.bodyMedium!
+                    .copyWith(color: ColorsUtil.primaryclr),
+              ),
             )
           ],
         ),
-        // Spacer(),
         const SizedBox(height: 50),
         ElevatedButton(
           onPressed: () {
-            setState(() {
-              pageNumber++;
-            });
+            if (_formKey.currentState!.validate()) {
+              // Form is valid, proceed with data
+              final userData = {
+                'firstName': firstNameController.text,
+                'lastName': lastNameController.text,
+                'day': dayController.text,
+                'month': monthController.text,
+                'year': yearController.text,
+                'gender': isMale ? 'Male' : 'Female',
+              };
+
+              // You can process userData here
+              print(userData);
+
+              setState(() {
+                pageNumber++;
+              });
+            }
           },
           child: Text(
             "Next",

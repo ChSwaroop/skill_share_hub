@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-class ColorsUtil{
-
+class ColorsUtil {
   static const primaryclr = Color(0xFFEE495C);
   static const secondaryclr = Color(0xFFEB919B);
   static const textclr = Color(0xFF3D3D3D);
@@ -12,4 +11,5 @@ class ColorsUtil{
   static const cardclr = Color(0xFFEE495C);
   static const bgclr = Colors.white;
   static const thirdtxtclr = Color(0xFF1E1E1E);
+  static const shadowClr = Color(0x000000);
 }

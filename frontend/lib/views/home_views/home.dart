@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:skill_share_hub/colors.dart';
+import 'package:skill_share_hub/views/blocked_users.dart';
 import 'package:skill_share_hub/views/home_views/chart.dart';
 import 'package:skill_share_hub/views/home_views/chat_bot.dart';
 import 'package:skill_share_hub/views/home_views/chat_menu.dart';
@@ -41,9 +42,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     children: [
                       InkWell(
-                        onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const Profile()));
-                      },
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Profile(),
+                            ),
+                          );
+                        },
                         child: Container(
                           height: 30,
                           width: 30,
@@ -52,17 +58,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 10),
                       InkWell(
-                        onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const Chatbot()));
-                      },
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const Chatbot()));
+                        },
                         child: Container(
                           child: Image.asset("assets/images/chatbot.png"),
                         ),
                       ),
                       const SizedBox(width: 10),
                       InkWell(
-                        onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const ToDo()));
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const ToDo()));
                         },
                         child: Container(
                           child: Image.asset("assets/images/check.png"),
@@ -70,8 +82,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 10),
                       InkWell(
-                        onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatMenu()));
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const ChatMenu()));
                         },
                         child: Container(
                           child: Image.asset("assets/images/notifications.png"),
@@ -85,14 +100,14 @@ class _HomeScreenState extends State<HomeScreen> {
               TextFormField(
                 style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
                 cursorColor: ColorsUtil.primaryclr,
-                decoration:
-                    const InputDecoration(hintText: "Search for a skill to learn..."),
+                decoration: const InputDecoration(
+                    hintText: "Search for a skill to learn..."),
               ),
               const SizedBox(height: 30),
               Row(
                 children: [
                   Text(
-                    "Hi, Rishika!",
+                    "Hi, Swaroop!",
                     style: theme.textTheme.headlineSmall,
                   ),
                 ],
@@ -189,7 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         fixedSize: const Size(130, 30),
                       ),
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const Explore()));
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const Explore()));
                       },
                       child: Text(
                         "Explore now !",
@@ -275,8 +293,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Container(
                   height: 250,
                   width: width - 100,
-                  margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 5.0),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     color: Colors.white,
@@ -479,6 +499,23 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
+        SizedBox(height: 50),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BlockedUsers(),
+              ),
+            );
+          },
+          child: Text(
+            "Blocked users",
+            style: TextStyle(
+              color: Colors.white,
+            ),
+          ),
+        )
       ],
     );
   }

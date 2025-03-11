@@ -18,7 +18,7 @@ class LineChartSample extends StatelessWidget {
               const FlSpot(5, 3.5),
             ],
             isCurved: true, // Optional: To create a smooth curve
-            colors: [Colors.yellow],
+            // colors: [Colors.yellow],
             dotData: FlDotData(
               show: true, // To show dots at data points
               // dotColor: Colors.yellow,

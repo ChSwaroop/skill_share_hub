@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skill_share_hub/colors.dart';
+import 'package:skill_share_hub/views/settings.dart';
 import 'package:skill_share_hub/views/util/custom_card.dart';
 
 class Profile extends StatefulWidget {
@@ -44,6 +45,12 @@ class _ProfileState extends State<Profile> {
                   Row(
                     children: [
                       InkWell(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => Settings()));
+                        },
                         child: Image.asset("assets/images/settings.png"),
                       ),
                       const SizedBox(width: 7),
@@ -231,7 +238,8 @@ class _ProfileState extends State<Profile> {
                   Container(
                     height: 80,
                     width: 2,
-                    decoration: const BoxDecoration(color: ColorsUtil.borderclr),
+                    decoration:
+                        const BoxDecoration(color: ColorsUtil.borderclr),
                   ),
                   const SizedBox(width: 15),
                   Column(
