@@ -4,10 +4,16 @@ const http = require('http');
 const socketIo = require('socket.io');
 const connectMongoDB = require('./config/db');
 const authRoutes = require('./routes/auth');
-const messageRoutes = require('./routes/message');
+const messageRoutes = require('./routes/messageRoutes');
 const userRoutes = require('./routes/user');
-const User = require('./models/user');
+const { User, Chat, Message } = require('./models/user');
 const SkillProgress = require('./models/skillProgress');
+const skillRoutes = require('./routes/skillRoutes')
+const connectionRoutes = require('./routes/connection');
+const mongoose = require('mongoose')
+
+const { RtcTokenBuilder, RtcRole } = require('agora-access-token');
+const chatRoutes = require('./routes/chatRoutes');
 
 
 const app = express();
@@ -19,6 +25,9 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/skills', skillRoutes);
+app.use('/api/connections', connectionRoutes);
+app.use('/api/chats', chatRoutes);
 
 // Simple Route for Testing
 app.get('/', (req, res) => {
@@ -26,17 +35,351 @@ app.get('/', (req, res) => {
 });
 
 // Socket.io for real-time messaging
-io.on('connection', (socket) => {
-  console.log('New client connected');
+// io.on('connection', (socket) => {
+//   console.log('New client connected');
 
-  socket.on('sendMessage', (message) => {
-    io.emit('receiveMessage', message);
+//   socket.on('sendMessage', (message) => {
+//     io.emit('receiveMessage', message);
+//   });
+
+//   socket.on('disconnect', () => {
+//     console.log('Client disconnected');
+//   });
+// });
+
+//-----------------------------------------------Messaging-----------------------------------------//
+// Socket.IO connection handler
+const connectedUsers = new Map(); // Store socket.id -> userId mapping
+
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+
+  // User authentication and online status
+  socket.on('authenticate', async (userId) => {
+
+    console.log("connected users while auth: " + JSON.stringify(Object.fromEntries(connectedUsers)));
+    try {
+      const user = await User.findById(userId);
+      if (!user) return;
+
+      // Update user status to online
+      await User.findByIdAndUpdate(userId, { isOnline: true, lastSeen: new Date() });
+
+      // // If user already has a connection, remove old socket
+      // for (const [existingSocketId, existingUserId] of connectedUsers.entries()) {
+      //   if (existingUserId.toString() === userId.toString()) {
+      //     console.log(`Disconnecting previous session for user: ${userId}`);
+      //     io.sockets.sockets.get(existingSocketId)?.disconnect(true);
+      //     connectedUsers.delete(existingSocketId);
+      //   }
+      // }
+
+      // Add user to connected users map
+      connectedUsers.set(socket.id, userId);
+
+      // Join all user's chat rooms
+      const chats = await Chat.find({ participants: userId });
+      chats.forEach(chat => {
+        socket.join(chat._id.toString());
+      });
+
+      // Broadcast user online status to connections
+      const connections = user.connections;
+      connections.forEach(async (connectionId) => {
+        // Find sockets of connected users who are online
+        for (const [socketId, connectedUserId] of connectedUsers.entries()) {
+          if (connectedUserId.toString() === connectionId.toString()) {
+            io.to(socketId).emit('user_status_changed', {
+              userId: userId,
+              status: 'online'
+            });
+          }
+        }
+      });
+
+      console.log(`User ${userId} authenticated and set to online`);
+    } catch (error) {
+      console.error('Authentication error:', error);
+    }
   });
 
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
+  // Handle new message
+  socket.on('send_message', async (messageData) => {
+    try {
+      const { chatId, content, contentType, fileUrl } = messageData;
+      const senderId = connectedUsers.get(socket.id);
+
+      if (!senderId) return;
+
+      // Create new message
+      const newMessage = new Message({
+        _id: new mongoose.Types.ObjectId(),
+        chatId,
+        sender: senderId,
+        content,
+        contentType: contentType || 'text',
+        fileUrl,
+        status: 'sent',
+        readBy: []
+      });
+
+      await newMessage.save();
+
+      // Update chat's last message
+      await Chat.findByIdAndUpdate(chatId, {
+        lastMessage: newMessage._id,
+        updatedAt: new Date()
+      });
+
+      // Populate sender info
+      const populatedMessage = await Message.findById(newMessage._id)
+        .populate('sender', 'username profilePicture');
+
+      // Emit message to all participants in the chat
+      io.to(chatId).emit('new_message', populatedMessage);
+
+      // Mark as delivered for online users
+      const chat = await Chat.findById(chatId);
+      chat.participants.forEach(async (participantId) => {
+        if (participantId.toString() !== senderId.toString()) {
+          // Check if participant is online
+          let isRecipientOnline = false;
+          for (const [_, connectedUserId] of connectedUsers.entries()) {
+            if (connectedUserId.toString() === participantId.toString()) {
+              isRecipientOnline = true;
+              break;
+            }
+          }
+
+          if (isRecipientOnline) {
+            // Update message status to delivered
+            await Message.findByIdAndUpdate(newMessage._id, {
+              status: 'delivered'
+            });
+
+            // Emit delivery status update
+            io.to(chatId).emit('message_status_updated', {
+              messageId: newMessage._id,
+              status: 'delivered'
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Send message error:', error);
+    }
+  });
+
+  // Handle read receipts
+  socket.on('mark_as_read', async (data) => {
+    try {
+      const { messageId } = data;
+      const userId = connectedUsers.get(socket.id);
+
+      if (!userId) return;
+
+      const message = await Message.findById(messageId);
+      if (!message) return;
+
+      // Check if user has already read the message
+      const alreadyRead = message.readBy.some(read => read.user.toString() === userId.toString());
+
+      if (!alreadyRead) {
+        // Add user to readBy array
+        await Message.findByIdAndUpdate(messageId, {
+          status: 'read',
+          $push: {
+            readBy: {
+              user: userId,
+              readAt: new Date()
+            }
+          }
+        });
+
+        // Notify chat participants about read status
+        io.to(message.chatId.toString()).emit('message_status_updated', {
+          messageId: message._id,
+          status: 'read',
+          readBy: userId
+        });
+      }
+    } catch (error) {
+      console.error('Mark as read error:', error);
+    }
+  });
+
+  // Connection management endpoints
+  socket.on('request_connection', async (data) => {
+    try {
+      const { targetUserId } = data;
+      const userId = connectedUsers.get(socket.id);
+
+      if (!userId) return;
+
+      await User.findByIdAndUpdate(targetUserId, {
+        $addToSet: { pendingConnections: userId }
+      });
+
+      // Notify target user if online
+      for (const [socketId, connectedUserId] of connectedUsers.entries()) {
+        if (connectedUserId.toString() === targetUserId.toString()) {
+          io.to(socketId).emit('connection_request', {
+            userId
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Request connection error:', error);
+    }
+  });
+
+  socket.on('accept_connection', async (data) => {
+    try {
+      const { targetUserId } = data;
+      const userId = connectedUsers.get(socket.id);
+
+      if (!userId) return;
+
+      // Update both users' connections
+      await User.findByIdAndUpdate(userId, {
+        $addToSet: { connections: targetUserId },
+        $pull: { pendingConnections: targetUserId }
+      });
+
+      await User.findByIdAndUpdate(targetUserId, {
+        $addToSet: { connections: userId }
+      });
+
+      // Create a direct chat between the users if it doesn't exist
+      const existingChat = await Chat.findOne({
+        chatType: 'direct',
+        participants: { $all: [userId, targetUserId], $size: 2 }
+      });
+
+      if (!existingChat) {
+        const newChat = new Chat({
+          _id: new mongoose.Types.ObjectId(),
+          chatType: 'direct',
+          participants: [userId, targetUserId],
+          createdBy: userId,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+
+        await newChat.save();
+
+        // Join both users to the chat room
+        socket.join(newChat._id.toString());
+
+        // Find target user's socket and join them to chat
+        for (const [socketId, connectedUserId] of connectedUsers.entries()) {
+          if (connectedUserId.toString() === targetUserId.toString()) {
+            io.sockets.sockets.get(socketId)?.join(newChat._id.toString());
+          }
+        }
+      }
+
+      // Notify both users
+      socket.emit('connection_accepted', { userId: targetUserId });
+
+      for (const [socketId, connectedUserId] of connectedUsers.entries()) {
+        if (connectedUserId.toString() === targetUserId.toString()) {
+          io.to(socketId).emit('connection_accepted', { userId });
+        }
+      }
+    } catch (error) {
+      console.error('Accept connection error:', error);
+    }
+  });
+
+  // Group chat operations
+  socket.on('create_group_chat', async (data) => {
+    try {
+      const { name, participants } = data;
+      const creatorId = connectedUsers.get(socket.id);
+
+      if (!creatorId) return;
+
+      // Ensure creator is included in participants
+      const allParticipants = [...new Set([...participants, creatorId])];
+
+      const newGroupChat = new Chat({
+        _id: new mongoose.Types.ObjectId(),
+        chatType: 'group',
+        name,
+        participants: allParticipants,
+        createdBy: creatorId,
+        admins: [creatorId],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      await newGroupChat.save();
+
+      // Join creator to group chat room
+      socket.join(newGroupChat._id.toString());
+
+      // Join all online participants to the group chat room
+      allParticipants.forEach(participantId => {
+        for (const [socketId, connectedUserId] of connectedUsers.entries()) {
+          if (connectedUserId.toString() === participantId.toString()) {
+            io.sockets.sockets.get(socketId)?.join(newGroupChat._id.toString());
+            io.to(socketId).emit('added_to_group', {
+              chatId: newGroupChat._id,
+              chatName: name
+            });
+          }
+        }
+      });
+
+      socket.emit('group_created', newGroupChat);
+    } catch (error) {
+      console.error('Create group chat error:', error);
+    }
+  });
+
+  // Disconnect handler
+  socket.on('disconnect', async () => {
+    console.log("disconnection called");
+    const userId = connectedUsers.get(socket.id);
+    if (userId) {
+      // Update user status to offline
+      await User.findByIdAndUpdate(userId, {
+        isOnline: false,
+        lastSeen: new Date()
+      });
+
+      // Notify connections about user going offline
+      const user = await User.findById(userId);
+      if (user) {
+        const connections = user.connections;
+        connections.forEach(async (connectionId) => {
+          // Find sockets of connected users who are online
+          for (const [socketId, connectedUserId] of connectedUsers.entries()) {
+            if (connectedUserId.toString() === connectionId.toString()) {
+              io.to(socketId).emit('user_status_changed', {
+                userId: userId,
+                status: 'offline',
+                lastSeen: new Date()
+              });
+            }
+          }
+        });
+      }
+
+      // Remove from connected users map
+      connectedUsers.delete(socket.id);
+      console.log("connected users while disconnect: " + JSON.stringify(Object.fromEntries(connectedUsers)));
+
+      console.log(`User ${userId} disconnected and set to offline`);
+    }
+
+    console.log('Client disconnected:', socket.id);
   });
 });
+
+//-----------------------------------------------Messaging-----------------------------------------//
+
 
 // Temporary token for Agora video calls
 const AGORA_TEMP_TOKEN = '007eJxTYEhaxH7GTONn0D+Li66Wy24c/SPscIXZP86Et1/8aFWQQaUCg4mFgbmFZYqBUWpaiompZUpiskFScqqJebKRoUlKmnHqR0G19IZARoaITbKsjAwQCOJzMZRlpqTmKyQn5uQwMAAAoHAf4Q==';
@@ -90,3 +433,156 @@ const startServer = async () => {
 
 startServer();
 
+
+// // REST API endpoints for chat history, user management, etc.
+// app.get('/api/chats/:userId', async (req, res) => {
+//   console.log("get chat list called");
+//   try {
+//     const { userId } = req.params;
+//     const chats = await Chat.find({ participants: userId })
+//       .populate('participants', 'username profilePicture isOnline lastSeen')
+//       .populate('lastMessage')
+//       .sort({ updatedAt: -1 });
+
+//     res.status(200).json(chats);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+// app.get('/api/messages/:chatId', async (req, res) => {
+//   try {
+//     const { chatId } = req.params;
+//     const { page = 1, limit = 50 } = req.query;
+
+//     const messages = await Message.find({ chatId })
+//       .populate('sender', 'username profilePicture')
+//       .sort({ createdAt: -1 })
+//       .limit(parseInt(limit))
+//       .skip((parseInt(page) - 1) * parseInt(limit));
+
+//     res.status(200).json(messages.reverse()); // Return in chronological order
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+// app.get('/api/users/:userId/connections', async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+//     const user = await User.findById(userId).populate('connections', 'username profilePicture isOnline lastSeen skills');
+
+//     if (!user) {
+//       return res.status(404).json({ message: 'User not found' });
+//     }
+
+//     res.status(200).json(user.connections);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+// app.get('/api/users/:userId/pending-connections', async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+//     const user = await User.findById(userId).populate('pendingConnections', 'username profilePicture skills');
+
+//     if (!user) {
+//       return res.status(404).json({ message: 'User not found' });
+//     }
+
+//     res.status(200).json(user.pendingConnections);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+// app.get('/api/users/search', async (req, res) => {
+//   try {
+//     const { query, skills } = req.query;
+//     let searchQuery = {};
+
+//     if (query) {
+//       searchQuery.$or = [
+//         { username: { $regex: query, $options: 'i' } },
+//         { email: { $regex: query, $options: 'i' } }
+//       ];
+//     }
+
+//     if (skills) {
+//       const skillsArray = skills.split(',');
+//       searchQuery.skills = { $in: skillsArray };
+//     }
+
+//     const users = await User.find(searchQuery)
+//       .select('username profilePicture isOnline lastSeen skills');
+
+//     res.status(200).json(users);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+/////////////callss----------
+
+const APP_ID = process.env.AGORA_APP_ID;
+const APP_CERTIFICATE = process.env.AGORA_APP_CERTIFICATE;
+
+// Generate an RTC token
+app.post('/api/rtc-token', (req, res) => {
+  console.log("request for the token...");
+  try {
+    const { channelName, uid, role, expirationTimeInSeconds = 3600 } = req.body;
+
+    if (!channelName) {
+      return res.status(400).json({ error: 'Channel name is required' });
+    }
+
+    // Role can be either 'publisher' or 'subscriber'
+    const selectedRole = role === 'subscriber' ? RtcRole.SUBSCRIBER : RtcRole.PUBLISHER;
+
+    // Set expiration time
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
+
+    // Build token
+    const token = RtcTokenBuilder.buildTokenWithUid(
+      APP_ID,
+      APP_CERTIFICATE,
+      channelName,
+      uid || 0, // 0 means use the Agora assigned uid
+      selectedRole,
+      privilegeExpiredTs
+    );
+
+    console.log("token generated and sent to client: " + token);
+
+    return res.json({ token, uid: uid || 0, channelName });
+  } catch (error) {
+    console.error('Error generating token:', error);
+    return res.status(500).json({ error: 'Failed to generate token' });
+  }
+});
+
+// Get active channels (for a production app, you'd track this in a database)
+app.get('/api/active-calls', (req, res) => {
+  // In a real application, you would retrieve this from a database
+  return res.json({ activeCalls: [] });
+});
+
+// Start a new call
+app.post('/api/start-call', (req, res) => {
+  const { callType, participants } = req.body;
+
+  // In a real application, you would:
+  // 1. Create a call record in your database
+  // 2. Send notifications to participants
+  // 3. Generate and return a unique channel name
+
+  const channelName = `call_${Date.now()}`;
+
+  return res.json({
+    channelName,
+    callType,
+    participants
+  });
+});

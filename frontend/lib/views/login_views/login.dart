@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:skill_share_hub/colors.dart';
+import 'package:skill_share_hub/providers/user_provider.dart';
 import 'package:skill_share_hub/repo/auth.dart';
 import 'package:skill_share_hub/views/home_views/home.dart';
 import 'package:skill_share_hub/views/login_views/signup.dart';
@@ -44,13 +46,24 @@ class _LoginState extends State<Login> {
 
       try {
         // Call the login API
-        final token = await _apiService.login(
+        final login_res = await _apiService.login(
             _emailController.text.trim(), _passwordController.text);
 
-        // If successful, navigate to home screen
-        if (mounted) {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()));
+        if (login_res != null) {
+          // Get the UserProvider instance
+          final userProvider =
+              Provider.of<UserProvider>(context, listen: false);
+
+          // Save the token securely
+          await userProvider.setToken(login_res.token!);
+          await userProvider.setUser(login_res.user!);
+          // If successful, navigate to home screen
+          if (mounted) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()));
+          }
+        } else {
+          throw Exception('Login failed');
         }
       } catch (e) {
         // Show error message

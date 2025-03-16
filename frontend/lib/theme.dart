@@ -16,23 +16,23 @@ ThemeData theme = ThemeData(
         fontSize: 20,
       ),
       bodyMedium: TextStyle(
-        fontSize: 13,
+        fontSize: 15,
         color: ColorsUtil.secondarytxtclr,
         // height: 20,
       ),
-      bodyLarge: TextStyle(color: Colors.white, fontSize: 15),
-      bodySmall: TextStyle(fontSize: 10, color: ColorsUtil.secondarytxtclr),
-      titleLarge: TextStyle(fontSize: 17, color: Colors.white),
+      bodyLarge: TextStyle(color: Colors.white, fontSize: 17),
+      bodySmall: TextStyle(fontSize: 12, color: ColorsUtil.secondarytxtclr),
+      titleLarge: TextStyle(fontSize: 19, color: Colors.white),
       titleMedium: TextStyle(
-        fontSize: 11,
+        fontSize: 13,
         color: ColorsUtil.thirdtxtclr,
       ),
       titleSmall: TextStyle(
-        fontSize: 8,
+        fontSize: 10,
         color: Color(0xFFBABABA),
       ),
       labelSmall: TextStyle(
-        fontSize: 9,
+        fontSize: 11,
         color: ColorsUtil.primaryclr,
       )),
   inputDecorationTheme: InputDecorationTheme(

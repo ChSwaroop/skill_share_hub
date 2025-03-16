@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:skill_share_hub/colors.dart';
+import 'package:skill_share_hub/providers/user_provider.dart';
 import 'package:skill_share_hub/views/settings.dart';
 import 'package:skill_share_hub/views/util/custom_card.dart';
 
@@ -61,7 +63,17 @@ class _ProfileState extends State<Profile> {
                           style: theme.textTheme.bodySmall!
                               .copyWith(color: ColorsUtil.primaryclr),
                         ),
-                      )
+                      ),
+                      IconButton(
+                        onPressed: () async {
+                          // Call logout function
+                          debugPrint("called logout");
+                          final userProvider =
+                              Provider.of<UserProvider>(context, listen: false);
+                          await userProvider.logout();
+                        },
+                        icon: Icon(Icons.logout),
+                      ),
                     ],
                   )
                 ],

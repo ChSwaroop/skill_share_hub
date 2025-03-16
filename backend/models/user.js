@@ -51,7 +51,7 @@ const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
-  dateOfBirth: { type: String, required: true },
+  dateOfBirth: { type: Date, required: true },
   gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
   email: { type: String, required: true, unique: true },
   phoneNumber: { type: String, required: true, unique: true },
@@ -75,7 +75,7 @@ const UserSchema = new mongoose.Schema({
     // startDate: Date,
     // endDate: Date
   }],
-  skills: [{ type: String }], // Array of skill tags
+  skills: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Skill' }], // Array of skill tags
   certifications: [{
     title: String,
   }],
@@ -93,7 +93,10 @@ const UserSchema = new mongoose.Schema({
   //     },
   //   ],
   // },
-
+  connections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  pendingConnections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  lastSeen: { type: Date, default: Date.now },
+  isOnline: { type: Boolean, default: false },
   blockedUsers: [
     {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -105,16 +108,57 @@ const UserSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const SkillSchema = new mongoose.Schema({
+  name: { type: String, required: true, unique: true },
+  category: { type: String }, // Optional: You can categorize skills (e.g., "Technical", "Soft Skills")
+  description: { type: String }, // Optional: Brief description of the skill
+  createdAt: { type: Date, default: Date.now }
+});
+
+
 // Chat Schema
+// const ChatSchema = new mongoose.Schema({
+//   members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Members in the chat
+//   isGroupChat: { type: Boolean, default: false },
+//   groupName: { type: String }, // Only for group chats
+//   messages: [{
+//     sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+//     content: { type: String },
+//     timestamp: { type: Date, default: Date.now }
+//   }]
+// });
+
 const ChatSchema = new mongoose.Schema({
-  members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Members in the chat
-  isGroupChat: { type: Boolean, default: false },
-  groupName: { type: String }, // Only for group chats
-  messages: [{
-    sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    content: { type: String },
-    timestamp: { type: Date, default: Date.now }
-  }]
+  _id: mongoose.Schema.Types.ObjectId,
+  chatType: { type: String, enum: ['direct', 'group'], required: true },
+  participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  name: { type: String }, // Only required for group chats
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  admins: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Only for group chats
+  lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+// MESSAGE SCHEMA
+const MessageSchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId,
+  chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'Chat', required: true },
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  content: { type: String, required: true },
+  contentType: { type: String, enum: ['text', 'image', 'file'], default: 'text' },
+  fileUrl: { type: String }, // Optional, for image/file sharing
+  status: {
+    type: String,
+    enum: ['sent', 'delivered', 'read'],
+    default: 'sent'
+  },
+  readBy: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    readAt: { type: Date }
+  }],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
 
 // TODO Schema
@@ -144,19 +188,6 @@ const ChatbotHistorySchema = new mongoose.Schema({
   }]
 });
 
-//connection-schema
-
-const ConnectionSchema = new mongoose.Schema({
-  requester: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  recipient: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  skill: { type: mongoose.Schema.Types.ObjectId, ref: 'Skill', required: false },
-  status: { type: String, enum: ['pending', 'accepted', 'rejected', 'cancelled'], default: 'pending' },
-  message: { type: String },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
-
-
 // Analytics Schema
 const AnalyticsSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -179,5 +210,6 @@ module.exports = {
   Feedback: mongoose.model('Feedback', FeedbackSchema),
   ChatbotHistory: mongoose.model('ChatbotHistory', ChatbotHistorySchema),
   Analytics: mongoose.model('Analytics', AnalyticsSchema),
-  Connection: mongoose.model('Connections', ConnectionSchema),
+  Skill: mongoose.model('Skill', SkillSchema),
+  Message: mongoose.model('Message', MessageSchema),
 };

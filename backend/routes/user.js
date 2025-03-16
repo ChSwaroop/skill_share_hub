@@ -24,6 +24,14 @@ router.post('/leave-community', userController.leaveCommunity);
 // Route to get user-specific dashboard data
 router.get('/dashboard', userController.getDashboard);
 
+router.get('/search/skill', authMiddleware, userController.searchUsersBySkill);
+
+router.get('/:userId/connections', userController.getUserConnections);
+
+router.get('/:userId/pending-connections', userController.getPendingConnections);
+
+router.get('/search', userController.searchUsers);
+
 module.exports = router;
 
 // Block/Unblock a User

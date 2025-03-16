@@ -1,14 +1,15 @@
-const User = require('../models/user');
 const SkillProgress = require('../models/skillProgress');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+
+const { User, Chat, Todo, Feedback, ChatbotHistory, Analytics, Skill } = require('../models/user.js');
 
 // Get User Profile
 exports.getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
-    
+
     res.json(user);
   } catch (error) {
     console.error(error);
@@ -173,5 +174,103 @@ exports.deleteUserAccount = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.searchUsersBySkill = async (req, res) => {
+  let skillQuery = req.query.skill;
+
+  if (!skillQuery || typeof skillQuery !== 'string') {
+    return res.status(400).json({ message: "A valid skill query is required." });
+  }
+
+  // Trim and escape the query to prevent regex injection
+  const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escapedQuery = escapeRegex(skillQuery.trim());
+
+  try {
+    // Find skills that match the query (using partial match if needed)
+    const skills = await Skill.find({
+      name: { $regex: new RegExp(escapedQuery, 'i') }
+    });
+
+    if (!skills || skills.length === 0) {
+      return res.status(404).json({ message: "No skills found", users: [] });
+    }
+
+    // Extract skill IDs from the found skills
+    const skillIds = skills.map(skill => skill._id);
+
+    // Find Users who have any of these skills in their skills array, excluding the authenticated user
+    const users = await User.find({
+      skills: { $in: skillIds },
+      _id: { $ne: req.user.userId } // Exclude the authenticated user
+    })
+      .populate({
+        path: 'skills',
+        model: 'Skill'
+      });
+
+    return res.status(200).json({ message: "Users found", users });
+  } catch (error) {
+    console.error("Error searching users by skill:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+exports.getUserConnections = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).populate('connections', 'username profilePicture isOnline lastSeen skills');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(user.connections);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPendingConnections = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).populate('pendingConnections', 'username profilePicture skills');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(user.pendingConnections);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.searchUsers = async (req, res) => {
+  try {
+    const { query, skills } = req.query;
+    let searchQuery = {};
+
+    if (query) {
+      searchQuery.$or = [
+        { username: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } }
+      ];
+    }
+
+    if (skills) {
+      const skillsArray = skills.split(',');
+      searchQuery.skills = { $in: skillsArray };
+    }
+
+    const users = await User.find(searchQuery)
+      .select('username profilePicture isOnline lastSeen skills');
+
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

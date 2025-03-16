@@ -8,13 +8,18 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:skill_share_hub/constants.dart';
+import 'package:skill_share_hub/models/login_model.dart';
 
 class AuthRepo {
   final _storage = const FlutterSecureStorage();
+  // final UserProvider userProvider;
 
-  Future<Map<String, dynamic>> registerUser(
+  // AuthRepo(this.userProvider);
+
+  Future<LoginModel> registerUser(
       {required String firstName,
       required String lastName,
+      required String userName,
       required String dateOfBirth,
       required String gender,
       required String email,
@@ -44,6 +49,7 @@ class AuthRepo {
       final body = jsonEncode({
         'firstName': firstName,
         'lastName': lastName,
+        'username': userName,
         'dateOfBirth': dateOfBirth,
         'gender': gender,
         'email': email,
@@ -79,59 +85,43 @@ class AuthRepo {
 
       // Decode the response
       final Map<String, dynamic> responseData = jsonDecode(response.body);
+      debugPrint("-------------------------------------------------");
+      debugPrint("registration result: " + responseData.toString());
 
       if (response.statusCode == 201) {
         // Registration successful
-        return {
-          'success': true,
-          'message': responseData['message'] ?? 'User registered successfully',
-          'loggedin': responseData['loggedin'] ?? false,
-        };
+        // final String token = responseData['token'];
+        // await Provider.of<UserProvider>(context).setToken(token);
+        final data = loginModelFromJson(response.body);
+        // return {
+        //   'success': true,
+        //   'message': responseData['message'] ?? 'User registered successfully',
+        //   'loggedin': responseData['loggedin'] ?? false,
+        // };
+        return data;
       } else {
-        // Handle specific errors returned from the server
-        return {
-          'success': false,
-          'message': responseData['message'] ?? 'Registration failed',
-        };
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        debugPrint(errorData['message'] ?? 'registration failed');
+        throw Exception(errorData['message'] ?? 'registration failed');
+        // return null;
       }
-    } on SocketException {
-      return {
-        'success': false,
-        'message': 'No internet connection. Please check your network.'
-      };
-    } on TimeoutException {
-      return {
-        'success': false,
-        'message': 'Request timed out. Please try again.'
-      };
-    } on FormatException {
-      return {
-        'success': false,
-        'message': 'Server returned an unexpected response format.'
-      };
     } catch (e) {
-      debugPrint("Error in registration: $e");
-      return {
-        'success': false,
-        'message': 'Registration failed: ${e.toString()}'
-      };
+      debugPrint("Error while register in: " + e.toString());
+      rethrow;
+      // return null;
     }
   }
 
-  // Login method that takes email and password
-  Future<String> login(String email, String password) async {
+  Future<LoginModel> login(String email, String password) async {
     try {
-      // Prepare the API endpoint
       debugPrint("login called");
       final url = Uri.parse('${baseUrl}/api/auth/login');
 
-      // Prepare the request body
       final body = jsonEncode({
-        'email': email,
+        'username': email,
         'password': password,
       });
 
-      // Make the POST request
       final response = await http.post(
         url,
         headers: {
@@ -140,29 +130,26 @@ class AuthRepo {
         body: body,
       );
 
-      // Check response status
       if (response.statusCode == 200) {
-        // Parse the response
-        final Map<String, dynamic> data = jsonDecode(response.body);
+        // final Map<String, dynamic> data = jsonDecode(response.body);
+        final loginModel = loginModelFromJson(response.body);
+        debugPrint("name: ${loginModel.user!.firstName}");
+        debugPrint("id: ${loginModel.user!.id}");
 
-        // Extract the token
-        final String token = data['token'];
+        // Save the token securely if needed
+        // await userProvider.setToken(loginModel.token);
 
-        // Save the token securely
-        await _storage.write(key: 'auth_token', value: token);
-
-        // Return the token
-        return token;
+        return loginModel;
       } else {
-        // Handle error responses
         final Map<String, dynamic> errorData = jsonDecode(response.body);
         debugPrint(errorData['message'] ?? 'Login failed');
         throw Exception(errorData['message'] ?? 'Login failed');
+        // return null;
       }
     } catch (e) {
-      // Handle exceptions
-      debugPrint("Error while logging in:" + e.toString());
+      debugPrint("Error while logging in: " + e.toString());
       rethrow;
+      // return null;
     }
   }
 

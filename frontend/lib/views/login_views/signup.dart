@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:skill_share_hub/colors.dart';
+import 'package:skill_share_hub/providers/user_provider.dart';
 import 'package:skill_share_hub/repo/auth.dart';
 import 'package:skill_share_hub/views/home_views/home.dart';
 
@@ -13,6 +15,7 @@ class SignUp extends StatefulWidget {
 
 class _SignUpState extends State<SignUp> {
   int pageNumber = 0;
+  bool isLoading = false;
   // List<String> skills = [
   //   'Web Development',
   //   'UI / UX',
@@ -32,6 +35,7 @@ class _SignUpState extends State<SignUp> {
   // Controllers for text fields
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
+  final userNameController = TextEditingController();
   final dayController = TextEditingController();
   final monthController = TextEditingController();
   final yearController = TextEditingController();
@@ -330,55 +334,92 @@ class _SignUpState extends State<SignUp> {
         ),
         const SizedBox(height: 35),
         ElevatedButton(
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              try {
-                final response = await apiRepo.registerUser(
-                  firstName: firstNameController.text.trim(),
-                  lastName: lastNameController.text.trim(),
-                  dateOfBirth:
-                      "${dayController.text.trim()}-${monthController.text.trim()}-${yearController.text.trim()}",
-                  gender: "Male", // Adjust based on actual gender selection
-                  email: emailController.text.trim(),
-                  phoneNumber: phoneController.text.trim(),
-                  occupation: _occupationController.text.trim(),
-                  company: _companyController.text.trim(),
-                  education: _educationController.text.trim(),
-                  workExperience: _workExpController.text.trim(),
-                  internshipExperience: _internshipExpController.text.trim(),
-                  skills: List.from(skills),
-                  certifications: List.from(certifications),
-                  password: passwordController.text.trim(),
-                  startYear: _startYearController.text.trim(),
-                  endYear: _endYearController.text.trim(),
-                );
+          onPressed: isLoading
+              ? null
+              : () async {
+                  setState(() {
+                    isLoading = true;
+                  });
+                  if (_formKey.currentState!.validate()) {
+                    try {
+                      final response = await apiRepo.registerUser(
+                        firstName: firstNameController.text.trim(),
+                        lastName: lastNameController.text.trim(),
+                        userName: userNameController.text.trim(),
+                        dateOfBirth: DateTime(
+                                int.parse(yearController.text.trim()),
+                                int.parse(monthController.text.trim()),
+                                int.parse(dayController.text.trim()))
+                            .toIso8601String(), // Converts to a proper ISO 8601 format
+                        gender:
+                            "Male", // Adjust based on actual gender selection
+                        email: emailController.text.trim(),
+                        phoneNumber: phoneController.text.trim(),
+                        occupation: _occupationController.text.trim(),
+                        company: _companyController.text.trim(),
+                        education: _educationController.text.trim(),
+                        workExperience: _workExpController.text.trim(),
+                        internshipExperience:
+                            _internshipExpController.text.trim(),
+                        skills: List.from(skills),
+                        certifications: List.from(certifications),
+                        password: passwordController.text.trim(),
+                        startYear: _startYearController.text.trim(),
+                        endYear: _endYearController.text.trim(),
+                      );
 
-                if (response['success']) {
-                  // Registration successful, navigate to HomeScreen
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  );
-                } else {
-                  // Show error message from response
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(response['message'] ??
-                            "Registration failed. Try again.")),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(e.toString())),
-                );
-              }
-            }
-          },
-          child: Text(
-            "Next",
-            style: theme.textTheme.bodyMedium!
-                .copyWith(color: ColorsUtil.btntxtclr),
-          ),
+                      if (response != null) {
+                        // Get the UserProvider instance
+                        final userProvider =
+                            Provider.of<UserProvider>(context, listen: false);
+
+                        // Save the token securely
+                        await userProvider.setToken(response.token!);
+                        await userProvider.setUser(response.user!);
+                        // If successful, navigate to home screen
+                        if (mounted) {
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const HomeScreen()));
+                        }
+                      } else {
+                        throw Exception('registration failed');
+                      }
+                    } catch (e) {
+                      // Show error message
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content:
+                                Text('registration failed: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    } finally {
+                      if (mounted) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                      }
+                    }
+                  }
+                },
+          child: (isLoading)
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(
+                  "Register",
+                  style: theme.textTheme.bodyMedium!
+                      .copyWith(color: ColorsUtil.btntxtclr),
+                ),
         ),
         const SizedBox(height: 20),
       ],
@@ -696,6 +737,17 @@ class _SignUpState extends State<SignUp> {
           cursorColor: ColorsUtil.primaryclr,
           decoration: const InputDecoration(
             label: Text("Last Name"),
+            errorMaxLines: 1,
+          ),
+        ),
+        const SizedBox(height: 30),
+        TextFormField(
+          controller: userNameController,
+          // validator: validateName,
+          style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+          cursorColor: ColorsUtil.primaryclr,
+          decoration: const InputDecoration(
+            label: Text("user Name"),
             errorMaxLines: 1,
           ),
         ),

@@ -1,10 +1,15 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:skill_share_hub/colors.dart';
+import 'package:skill_share_hub/models/connection_model.dart';
+import 'package:skill_share_hub/providers/user_provider.dart';
 import 'package:skill_share_hub/views/blocked_users.dart';
+import 'package:skill_share_hub/views/chat_views/chat_list_screen.dart';
 import 'package:skill_share_hub/views/home_views/chart.dart';
 import 'package:skill_share_hub/views/home_views/chat_bot.dart';
 import 'package:skill_share_hub/views/home_views/chat_menu.dart';
+import 'package:skill_share_hub/views/home_views/connections.dart';
 import 'package:skill_share_hub/views/home_views/explore.dart';
 import 'package:skill_share_hub/views/home_views/profile.dart';
 import 'package:skill_share_hub/views/home_views/todo.dart';
@@ -83,25 +88,68 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 10),
                       InkWell(
                         onTap: () {
+                          // Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //         builder: (context) => const ChatMenu()));
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const ChatMenu()));
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ChatListScreen(),
+                            ),
+                          );
                         },
                         child: Container(
                           child: Image.asset("assets/images/notifications.png"),
                         ),
-                      )
+                      ),
+                      SizedBox(width: 10),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ConnectionsPage(
+                                authToken:
+                                    Provider.of<UserProvider>(context).token!,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          height: 30,
+                          width: 30,
+                          child: Image.asset("assets/images/profile-pic1.png"),
+                        ),
+                      ),
                     ],
                   )
                 ],
               ),
               const SizedBox(height: 15),
-              TextFormField(
-                style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
-                cursorColor: ColorsUtil.primaryclr,
-                decoration: const InputDecoration(
-                    hintText: "Search for a skill to learn..."),
+              // TextFormField(
+              //   style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+              //   cursorColor: ColorsUtil.primaryclr,
+              //   decoration: const InputDecoration(
+              //       hintText: "Search for a skill to learn..."),
+              // ),
+              Container(
+                height: 50,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: ColorsUtil.borderclr,
+                  ),
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                padding: EdgeInsets.only(left: 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Search for a skill to learn..."),
+                  ],
+                ),
               ),
               const SizedBox(height: 30),
               Row(

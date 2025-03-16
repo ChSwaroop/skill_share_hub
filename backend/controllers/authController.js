@@ -1,61 +1,176 @@
-// controllers/authController.js
-// const bcrypt = require('bcryptjs');
-// const jwt = require('jsonwebtoken');
-// const User = require('../models/user');
 require('dotenv').config();
 
-const { User, Chat, Todo, Feedback, ChatbotHistory, Analytics } = require('../models/user.js');
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
 const dotenv = require('dotenv');
-// dotenv.config();
+
+// Import the models (including the Skill model, which is exported as Skill)
+const { User, Chat, Todo, Feedback, ChatbotHistory, Analytics, Skill } = require('../models/user.js');
 
 exports.registerUser = async (req, res) => {
     try {
-        const { firstName, lastName, dateOfBirth, gender, email, phoneNumber, occupation,
-            company, education, workExperience, internshipExperience, skills, certifications, password
+        const {
+            username,
+            firstName,
+            lastName,
+            dateOfBirth,
+            gender,
+            email,
+            phoneNumber,
+            education,
+            workExperience,
+            internshipExperience,
+            skills, // Expecting an array of skill names (e.g., ["JavaScript", "Node.js"])
+            certifications,
+            password
         } = req.body;
+        console.log("register request received with user name: " + username);
 
-        // Use these destructured fields to handle registration logic here.
+        // Destructure fields from the request body according to the new schema
+        if (!dateOfBirth || isNaN(Date.parse(dateOfBirth))) {
+            return res.status(400).json({ error: "Invalid date format" });
+        }
 
+
+        // Validate for unique email, username, and phone number
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            res.status(400).json({ message: 'User with this mail id already exists' });
+            return res.status(400).json({ message: 'User with this email already exists' });
         }
-        // const existingUserByUsername = await User.findOne({ username });
-        // if (existingUserByUsername) {
-        //     return res.status(400).json({ message: 'Username is already taken' });
-        // }
+
+        const existingUserByUsername = await User.findOne({ username });
+        if (existingUserByUsername) {
+            return res.status(400).json({ message: 'Username is already taken' });
+        }
+
         const existingUserByPhoneNumber = await User.findOne({ phoneNumber });
         if (existingUserByPhoneNumber) {
-            return res.status(400).json({ message: 'User with this mobile number  already exists' });
+            return res.status(400).json({ message: 'User with this mobile number already exists' });
         }
+
+        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
-        // Create and save the user
+
+        // Process skills: convert each provided skill name into its corresponding ObjectId
+        let skillIds = [];
+        if (skills && Array.isArray(skills)) {
+            skillIds = await Promise.all(skills.map(async (skillName) => {
+                // Look for an existing skill document
+                let skill = await Skill.findOne({ name: skillName });
+                if (!skill) {
+                    // If the skill doesn't exist, create a new skill document
+                    skill = new Skill({ name: skillName });
+                    await skill.save();
+                }
+                return skill._id;
+            }));
+        }
+
+        // Create and save the new user document with fields matching the new schema
         const newUser = new User({
-            firstName, lastName, dateOfBirth, gender, email, phoneNumber, occupation,
-            company, education, workExperience, internshipExperience, skills, certifications, password: hashedPassword,
-            profilePicture: '', bio: '',
-            connections: {
-                active: [], // Active connections array
-                pending: [], // Pending connections array
-            },
-            blockedUsers: []  // Empty array for new users
+            username,
+            firstName,
+            lastName,
+            dateOfBirth: new Date(dateOfBirth), // Ensures proper conversion to Date
+            gender,
+            email,
+            phoneNumber,
+            password: hashedPassword,
+            education,
+            workExperience,
+            internshipExperience,
+            skills: skillIds,
+            certifications,
+            profilePicture: '', // You can update this later with an actual URL if needed
+            bio: '',
+            // Initialize the new fields
+            connections: [],
+            pendingConnections: [],
+            lastSeen: Date.now(),
+            isOnline: false,
+            blockedUsers: []
         });
 
         await newUser.save();
 
-        res.status(201).json({ message: "User registered successfully", loggedin: true });
+        console.log("user registration success");
+        const validUser = await User.findOne({
+            $or: [
+                { username: username }, // Check for username
+                { email: email },       // Check for email
+            ],
+        });
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: validUser._id, username: validUser.username },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || '30d' }
+        );
+
+        // Send success response
+        console.log(validUser.email);
+        return res.status(201).json({
+            message: "Registration successful",
+            token,
+            user: validUser,
+        });
     } catch (error) {
         console.error("Error registering user:", error);
-
-        // Send a consistent response to the client
         res.status(500).json({
             error: error.message || "Internal Server Error",
             loggedin: false,
         });
     }
 };
+
+
+// exports.registerUser = async (req, res) => {
+//     try {
+//         const { firstName, lastName, dateOfBirth, gender, email, phoneNumber, occupation,
+//             company, education, workExperience, internshipExperience, skills, certifications, password
+//         } = req.body;
+
+//         // Use these destructured fields to handle registration logic here.
+
+//         const existingUser = await User.findOne({ email });
+//         if (existingUser) {
+//             res.status(400).json({ message: 'User with this mail id already exists' });
+//         }
+//         // const existingUserByUsername = await User.findOne({ username });
+//         // if (existingUserByUsername) {
+//         //     return res.status(400).json({ message: 'Username is already taken' });
+//         // }
+//         const existingUserByPhoneNumber = await User.findOne({ phoneNumber });
+//         if (existingUserByPhoneNumber) {
+//             return res.status(400).json({ message: 'User with this mobile number  already exists' });
+//         }
+//         const hashedPassword = await bcrypt.hash(password, 10);
+//         // Create and save the user
+//         const newUser = new User({
+//             firstName, lastName, dateOfBirth, gender, email, phoneNumber, occupation,
+//             company, education, workExperience, internshipExperience, skills, certifications, password: hashedPassword,
+//             profilePicture: '', bio: '',
+//             connections: {
+//                 active: [], // Active connections array
+//                 pending: [], // Pending connections array
+//             },
+//             blockedUsers: []  // Empty array for new users
+//         });
+
+//         await newUser.save();
+
+//         res.status(201).json({ message: "User registered successfully", loggedin: true });
+//     } catch (error) {
+//         console.error("Error registering user:", error);
+
+//         // Send a consistent response to the client
+//         res.status(500).json({
+//             error: error.message || "Internal Server Error",
+//             loggedin: false,
+//         });
+//     }
+// };
 exports.loginUser = async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -95,6 +210,7 @@ exports.loginUser = async (req, res) => {
         return res.status(200).json({
             message: "Login successful",
             token,
+            user: validUser,
         });
     } catch (error) {
         console.error("Error during login:", error);
