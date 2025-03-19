@@ -5,86 +5,88 @@ import 'package:skill_share_hub/constants.dart';
 import 'package:skill_share_hub/models/connection_model.dart';
 
 class ConnectionRepo {
-  Future<void> createConnection({
-    required String recipientId,
-    String? connectionNotes,
-    required String authToken, // Authentication token
-  }) async {
-    final String url = "$baseUrl/api/connections"; // Replace with your API URL
+  Future<Connection> getMyConnections(
+      String status, int page, int limit, String token) async {
+    final response = await http.get(
+      Uri.parse(
+          '${baseUrl}/api/connections?status=$status&page=$page&limit=$limit'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization":
-              "Bearer $authToken", // Add authentication if required
-        },
-        body: jsonEncode({
-          "recipientId": recipientId,
-          "connectionNotes": connectionNotes,
-        }),
-      );
-      debugPrint("connection request sent");
-
-      if (response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
-        print(
-            "Connection request created successfully: ${responseData['data']}");
-        return responseData;
-      } else {
-        final errorMessage = jsonDecode(response.body)['error'];
-        print("Error: $errorMessage");
-        return null;
-      }
-    } catch (e) {
-      print("Error while making API call: $e");
-      return null;
+    if (response.statusCode == 200) {
+      debugPrint("$status connections: " + response.body);
+      return Connection.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to load connections');
     }
   }
 
-  Future<Connection> getMyConnections(
-      String? status, int page, int limit, String authToken) async {
-    final Uri uri = Uri.parse('$baseUrl/api/connections');
+  Future<dynamic> updateConnectionStatus(
+      String connectionId, String status, String token) async {
+    final response = await http.put(
+      Uri.parse('${baseUrl}/api/connections/$connectionId/status'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({
+        'status': status,
+      }),
+    );
 
-    final Map<String, String> queryParams = {
-      'page': page.toString(),
-      'limit': limit.toString(),
-      if (status != null) 'status': status,
-    };
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      debugPrint(
+          "Error while updating the status of a connections: " + response.body);
+      throw Exception('Failed to update connection status');
+    }
+  }
 
-    final Uri finalUri = uri.replace(queryParameters: queryParams);
+  Future<dynamic> createConnection(
+      String recipientId, String connectionNotes, String token) async {
+    final response = await http.post(
+      Uri.parse('${baseUrl}/api/connections'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({
+        'recipientId': recipientId,
+        'connectionNotes': connectionNotes,
+      }),
+    );
 
+    if (response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to create connection request');
+    }
+  }
+
+  Future<dynamic> deleteConnection(String connectionId, String token) async {
     try {
-      print('Fetching connections from: $finalUri'); // Debug: Print the URL
-
-      final response = await http.get(
-        finalUri,
+      final response = await http.delete(
+        Uri.parse('${baseUrl}/api/connections/$connectionId'),
         headers: {
-          'Authorization': 'Bearer $authToken',
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
       );
 
-      print(
-          'Response status code: ${response.statusCode}'); // Debug: Print status code
-      print(
-          'Response body: ${response.body}'); // Debug: Print the response body
-
       if (response.statusCode == 200) {
-        final Connection connection = connectionFromJson(response.body);
-        print(
-            'Connections fetched successfully: ${connection.data?.length} items'); // Debug: number of items.
-        return connection;
+        debugPrint("Connection removed");
+        return json.decode(response.body);
       } else {
-        print(
-            'Failed to load connections: ${response.statusCode}, ${response.body}');
-        throw Exception(
-            'Failed to load connections: ${response.statusCode}, ${response.body}');
+        debugPrint("Exception in removing in the connection: " + response.body);
+        throw Exception('Failed to delete connection');
       }
-    } catch (error) {
-      print('Error loading connections: $error');
-      throw Exception('Error loading connections: $error');
+    } catch (e) {
+      debugPrint("Exception in removing in the connection: " + e.toString());
+      throw Exception('Failed to delete connection');
     }
   }
 }

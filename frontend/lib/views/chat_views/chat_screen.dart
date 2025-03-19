@@ -131,7 +131,10 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: const Icon(Icons.phone),
             onPressed: () => _callService.startAudioCall(
               context: context,
-              participants: [userId],
+              participants: [
+                widget.chat.participants[0].id!,
+                widget.chat.participants[1].id!
+              ],
               displayName: authProvider.user!.username!,
             ),
           ),
@@ -140,7 +143,11 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: const Icon(Icons.videocam),
             onPressed: () => _callService.startVideoCall(
               context: context,
-              participants: [userId],
+              // participants: [userId],
+              participants: [
+                widget.chat.participants[0].id!,
+                widget.chat.participants[1].id!
+              ],
               displayName: authProvider.user!.username!,
             ),
           ),

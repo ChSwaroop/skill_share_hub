@@ -10,9 +10,9 @@ class ToDo extends StatefulWidget {
 
 class _ToDoState extends State<ToDo> {
   List<String> todos = [
-    "Meeting with Jon Dep (4: 00 PM)",
-    "Meeting with Jon Dep (4: 00 PM)",
-    "Meeting with Jon Dep (4: 00 PM)",
+    "Know about Dart (2: 00 PM)",
+    "Setup Dart in Laptop (3: 00 PM)",
+    "Learn Dart Basics (4: 00 PM)",
   ];
 
   Future<void> _showAddSkillDialog() async {
@@ -111,8 +111,8 @@ class _ToDoState extends State<ToDo> {
                   height: 75,
                   width: width,
                   margin: const EdgeInsets.only(bottom: 15, left: 5, right: 5),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15.0, vertical: 25.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 15.0, vertical: 25.0),
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [

@@ -10,6 +10,7 @@ const { User, Chat, Message } = require('./models/user');
 const SkillProgress = require('./models/skillProgress');
 const skillRoutes = require('./routes/skillRoutes')
 const connectionRoutes = require('./routes/connection');
+const admin = require('firebase-admin');
 const mongoose = require('mongoose')
 
 const { RtcTokenBuilder, RtcRole } = require('agora-access-token');
@@ -28,6 +29,16 @@ app.use('/api/users', userRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/connections', connectionRoutes);
 app.use('/api/chats', chatRoutes);
+
+// Initialize Firebase Admin SDK
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+  }),
+  databaseURL: process.env.FIREBASE_DATABASE_URL
+});
 
 // Simple Route for Testing
 app.get('/', (req, res) => {
@@ -524,12 +535,48 @@ startServer();
 // });
 /////////////callss----------
 
+// Call Schema to track active calls
+const callSchema = new mongoose.Schema({
+  channelName: { type: String, required: true, unique: true },
+  callType: { type: String, required: true }, // 'audio' or 'video'
+  initiator: { type: String, required: true }, // userId of the caller
+  participants: [{ type: String }], // array of userIds
+  startTime: { type: Date, default: Date.now },
+  active: { type: Boolean, default: true }
+});
+
+const Call = mongoose.model('Call', callSchema);
+
+// Agora configuration
 const APP_ID = process.env.AGORA_APP_ID;
 const APP_CERTIFICATE = process.env.AGORA_APP_CERTIFICATE;
 
+// API endpoint to register or update a user's FCM token
+app.post('/api/register-device', async (req, res) => {
+  try {
+    const { userId, username, fcmToken } = req.body;
+
+    if (!userId || !fcmToken) {
+      return res.status(400).json({ error: 'User ID and FCM token are required' });
+    }
+
+    // Update user info in the database, or create if not exists
+    await User.findByIdAndUpdate(
+      userId,
+      { fcmToken, lastUpdated: Date.now() },
+      { upsert: true, new: true }
+    );
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error registering device:', error);
+    return res.status(500).json({ error: 'Failed to register device' });
+  }
+});
+
 // Generate an RTC token
 app.post('/api/rtc-token', (req, res) => {
-  console.log("request for the token...");
+  console.log("Request for token received");
   try {
     const { channelName, uid, role, expirationTimeInSeconds = 3600 } = req.body;
 
@@ -554,7 +601,7 @@ app.post('/api/rtc-token', (req, res) => {
       privilegeExpiredTs
     );
 
-    console.log("token generated and sent to client: " + token);
+    console.log("Token generated: " + token.substring(0, 10) + "...");
 
     return res.json({ token, uid: uid || 0, channelName });
   } catch (error) {
@@ -563,26 +610,163 @@ app.post('/api/rtc-token', (req, res) => {
   }
 });
 
-// Get active channels (for a production app, you'd track this in a database)
-app.get('/api/active-calls', (req, res) => {
-  // In a real application, you would retrieve this from a database
-  return res.json({ activeCalls: [] });
+// Get active calls for a user
+app.get('/api/active-calls', async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Find all active calls where the user is a participant
+    const activeCalls = await Call.find({
+      participants: userId,
+      active: true
+    });
+
+    return res.json({ activeCalls });
+  } catch (error) {
+    console.error('Error fetching active calls:', error);
+    return res.status(500).json({ error: 'Failed to fetch active calls' });
+  }
 });
 
+// Send FCM notification
+async function sendCallNotification(recipientUserId, callData) {
+  try {
+    // Find the recipient's FCM token
+    const recipient = await User.findById(recipientUserId);
+    console.log("receipient: " + recipient);
+
+    if (!recipient || !recipient.fcmToken) {
+      console.error(`No FCM token found for user: ${recipientUserId}`);
+      return false;
+    }
+
+    // Get caller information
+    const caller = await User.findById(callData.callerId);
+    const callerName = caller ? caller.username : 'Unknown Caller';
+
+    // Prepare notification message
+    const message = {
+      data: {
+        type: 'call',
+        channelName: callData.channelName,
+        isVideo: (callData.callType === 'video').toString(),
+        callerName: callerName
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'call_channel'
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            contentAvailable: true,
+            sound: 'incoming_call.aiff',
+            category: 'call'
+          }
+        }
+      },
+      token: recipient.fcmToken
+    };
+
+    // Send the notification
+    const response = await admin.messaging().send(message);
+    console.log(`Notification sent to ${recipientUserId}, response:`, response);
+    return true;
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    return false;
+  }
+}
+
 // Start a new call
-app.post('/api/start-call', (req, res) => {
-  const { callType, participants } = req.body;
+app.post('/api/start-call', async (req, res) => {
+  try {
+    const { callerId, callType, participants } = req.body;
+    console.log("callerId: " + callerId);
+    console.log("callType: " + callType);
+    console.log("participants: " + participants);
 
-  // In a real application, you would:
-  // 1. Create a call record in your database
-  // 2. Send notifications to participants
-  // 3. Generate and return a unique channel name
+    if (!callerId || !callType || !participants || !Array.isArray(participants)) {
+      return res.status(400).json({ error: 'Caller ID, call type, and participants array are required' });
+    }
 
-  const channelName = `call_${Date.now()}`;
+    if (!['audio', 'video'].includes(callType)) {
+      return res.status(400).json({ error: 'Call type must be either "audio" or "video"' });
+    }
 
-  return res.json({
-    channelName,
-    callType,
-    participants
-  });
+    // Generate a unique channel name
+    const channelName = `call_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    // const channelName = `call`;
+
+    // Create call record in database
+    const call = new Call({
+      channelName,
+      callType,
+      initiator: callerId,
+      participants: [callerId, ...participants], // Include caller in participants
+      startTime: Date.now(),
+      active: true
+    });
+
+    await call.save();
+
+    // Send notifications to all participants except the caller
+    const notificationPromises = participants.map(participantId => {
+      if (participantId !== callerId) {
+        console.log("notification sent.. " + participantId);
+        return sendCallNotification(participantId, {
+          channelName,
+          callType,
+          callerId
+        });
+      }
+      return Promise.resolve(true);
+    });
+
+    // Wait for all notifications to be sent
+    await Promise.all(notificationPromises);
+
+    return res.json({
+      success: true,
+      channelName,
+      callType,
+      participants
+    });
+  } catch (error) {
+    console.error('Error starting call:', error);
+    return res.status(500).json({ error: 'Failed to start call' });
+  }
+});
+
+// End a call
+app.post('/api/end-call', async (req, res) => {
+  try {
+    const { channelName, userId } = req.body;
+
+    if (!channelName) {
+      return res.status(400).json({ error: 'Channel name is required' });
+    }
+
+    // Find and update the call
+    const call = await Call.findOne({ channelName });
+
+    if (!call) {
+      return res.status(404).json({ error: 'Call not found' });
+    }
+
+    // Update call status
+    call.active = false;
+    await call.save();
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error ending call:', error);
+    return res.status(500).json({ error: 'Failed to end call' });
+  }
 });

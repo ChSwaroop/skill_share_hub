@@ -34,6 +34,7 @@ class AgoraRepo {
   }
 
   Future<String> startCall({
+    required String currentUserId,
     required String callType, // 'audio' or 'video'
     required List<String> participants,
   }) async {
@@ -42,6 +43,7 @@ class AgoraRepo {
         Uri.parse('$baseUrl/api/start-call'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
+          'callerId': currentUserId,
           'callType': callType,
           'participants': participants,
         }),

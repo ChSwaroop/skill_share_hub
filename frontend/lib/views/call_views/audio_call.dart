@@ -34,6 +34,8 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint(
+        "IN audio call page : " + widget.callerName + " " + widget.channelName);
     _initializeCall();
 
     // Setup timer for call duration

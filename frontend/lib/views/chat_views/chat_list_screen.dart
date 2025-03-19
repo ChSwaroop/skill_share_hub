@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:skill_share_hub/colors.dart';
 import 'package:skill_share_hub/constants.dart';
 import 'package:skill_share_hub/models/chat_model.dart';
 import 'package:skill_share_hub/models/login_model.dart';
@@ -22,18 +23,30 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
+  bool isFetchingChats = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Initialize socket and fetch chats
+      setState(() {
+        isFetchingChats = true;
+      });
       final authProvider = Provider.of<UserProvider>(context, listen: false);
       final chatProvider = Provider.of<ChatProvider>(context, listen: false);
 
       if (authProvider.token != null && authProvider.user != null) {
         chatProvider.initSocket(authProvider.user!.id!);
+
+        debugPrint("isFetchingChats: $isFetchingChats");
         chatProvider.fetchChats();
+        debugPrint("isFetchingChats: $isFetchingChats");
       }
+
+      setState(() {
+        isFetchingChats = false;
+      });
     });
   }
 
@@ -91,8 +104,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     final user = User.fromJson(connections[i]);
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundImage:
-                            NetworkImage(user.profilePicture ?? ''),
+                        backgroundImage: NetworkImage((user.profilePicture ==
+                                    null ||
+                                user.profilePicture!.isEmpty)
+                            ? ((user.gender != 'Male')
+                                ? 'https://img.freepik.com/premium-vector/conceptual-illustration-person-crossing-finish-line-with-determination_1263357-35011.jpg?ga=GA1.1.1483351532.1733847503&semt=ais_hybrid'
+                                : 'https://img.freepik.com/premium-vector/career-woman-employee-ai-generated-image_362642-3848.jpg?ga=GA1.1.1483351532.1733847503&semt=ais_hybrid')
+                            : (user.profilePicture!)),
                       ),
                       title: Text(user.username ?? ''),
                       subtitle: Text(user.isOnline! ? 'Online' : 'Offline'),
@@ -172,6 +190,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Widget build(BuildContext context) {
     final chatProvider = Provider.of<ChatProvider>(context);
     final authProvider = Provider.of<UserProvider>(context);
+    final theme = Theme.of(context);
 
     if (!(authProvider.token != null && authProvider.user != null)) {
       return const Center(child: Text('Please login to view chats'));
@@ -212,114 +231,123 @@ class _ChatListScreenState extends State<ChatListScreen> {
             ),
           ],
         ),
-        body: chatProvider.chats.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('No chats yet'),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        _showConnectionsDialog(context);
-                      },
-                      icon: const Icon(Icons.chat),
-                      label: const Text('Start a new chat'),
+        body: (isFetchingChats)
+            ? CircularProgressIndicator()
+            : ((chatProvider.chats.isEmpty)
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('No chats yet'),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _showConnectionsDialog(context);
+                          },
+                          icon: const Icon(Icons.chat),
+                          label: const Text('Start a new chat'),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              )
-            : RefreshIndicator(
-                onRefresh: () => chatProvider.fetchChats(),
-                child: ListView.builder(
-                  itemCount: chatProvider.chats.length,
-                  itemBuilder: (context, index) {
-                    final chat = chatProvider.chats[index];
-                    final chatName = chat.getChatName(authProvider.user!.id!);
-                    final lastMessage = chat.lastMessage;
+                  )
+                : RefreshIndicator(
+                    onRefresh: () => chatProvider.fetchChats(),
+                    child: ListView.builder(
+                      itemCount: chatProvider.chats.length,
+                      itemBuilder: (context, index) {
+                        final chat = chatProvider.chats[index];
+                        final chatName =
+                            chat.getChatName(authProvider.user!.id!);
+                        final lastMessage = chat.lastMessage;
 
-                    // Find the other user in direct chats for online status
-                    bool isOnline = false;
-                    if (chat.chatType == 'direct') {
-                      final otherUser = chat.participants.firstWhere(
-                        (user) => user.id != authProvider.user!.id,
-                        orElse: () => chat.participants.first,
-                      );
-                      isOnline = otherUser.isOnline!;
-                    }
+                        // Find the other user in direct chats for online status
+                        bool isOnline = false;
+                        if (chat.chatType == 'direct') {
+                          final otherUser = chat.participants.firstWhere(
+                            (user) => user.id != authProvider.user!.id,
+                            orElse: () => chat.participants.first,
+                          );
+                          isOnline = otherUser.isOnline!;
+                        }
 
-                    return ListTile(
-                      leading: Stack(
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: NetworkImage(
-                              chat.getChatImage(authProvider.user!.id!),
-                            ),
-                          ),
-                          if (isOnline)
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: Colors.green,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Theme.of(context)
-                                        .scaffoldBackgroundColor,
-                                    width: 2,
-                                  ),
+                        return ListTile(
+                          leading: Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 30,
+                                backgroundImage: NetworkImage(
+                                  chat.getChatImage(authProvider.user!.id!),
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
-                      title: Text(chatName),
-                      subtitle: lastMessage != null
-                          ? Text(
-                              lastMessage.sender.id == authProvider.user!.id
-                                  ? 'You: ${lastMessage.content}'
-                                  : lastMessage.content,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            )
-                          : Text(
-                              chat.chatType == 'direct'
-                                  ? 'Start chatting'
-                                  : 'New group',
-                              style: TextStyle(fontStyle: FontStyle.italic),
-                            ),
-                      trailing: lastMessage != null
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  timeago.format(lastMessage.createdAt,
-                                      locale: 'en_short'),
-                                  style: TextStyle(fontSize: 12),
+                              if (isOnline)
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Theme.of(context)
+                                            .scaffoldBackgroundColor,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(height: 4),
-                                if (lastMessage.sender.id !=
-                                    authProvider.user!.id)
-                                  _buildStatusIndicator(lastMessage.status)
-                              ],
-                            )
-                          : null,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChatScreen(chat: chat),
+                            ],
                           ),
+                          title: Text(
+                            chatName,
+                            style: theme.textTheme.headlineSmall!.copyWith(
+                              color: ColorsUtil.primaryclr,
+                            ),
+                          ),
+                          subtitle: lastMessage != null
+                              ? Text(
+                                  lastMessage.sender.id == authProvider.user!.id
+                                      ? 'You: ${lastMessage.content}'
+                                      : lastMessage.content,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                )
+                              : Text(
+                                  chat.chatType == 'direct'
+                                      ? 'Start chatting'
+                                      : 'New group',
+                                  style: TextStyle(fontStyle: FontStyle.italic),
+                                ),
+                          trailing: lastMessage != null
+                              ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      timeago.format(lastMessage.createdAt,
+                                          locale: 'en_short'),
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    if (lastMessage.sender.id !=
+                                        authProvider.user!.id)
+                                      _buildStatusIndicator(lastMessage.status)
+                                  ],
+                                )
+                              : null,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChatScreen(chat: chat),
+                              ),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
-              ),
+                    ),
+                  )),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             _showConnectionsDialog(context);

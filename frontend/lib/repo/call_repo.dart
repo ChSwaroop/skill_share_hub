@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:skill_share_hub/providers/call_manager_provider.dart';
+import 'package:skill_share_hub/providers/user_provider.dart';
 import 'package:skill_share_hub/repo/agora_repo.dart';
 import 'package:skill_share_hub/views/call_views/audio_call.dart';
 import 'package:skill_share_hub/views/call_views/video_call.dart';
@@ -19,6 +20,8 @@ class CallRepo {
     try {
       // Get channel name from backend
       final channelName = await _agoraService.startCall(
+        currentUserId:
+            Provider.of<UserProvider>(context, listen: false).user!.id!,
         callType: 'video',
         participants: participants,
       );
@@ -63,6 +66,8 @@ class CallRepo {
     try {
       // Get channel name from backend
       final channelName = await _agoraService.startCall(
+        currentUserId:
+            Provider.of<UserProvider>(context, listen: false).user!.id!,
         callType: 'audio',
         participants: participants,
       );

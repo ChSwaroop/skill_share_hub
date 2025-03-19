@@ -5,7 +5,10 @@ import 'package:skill_share_hub/providers/call_manager_provider.dart';
 import 'package:skill_share_hub/providers/chat_provider.dart';
 import 'package:skill_share_hub/providers/user_provider.dart';
 import 'package:skill_share_hub/repo/agora_repo.dart';
+import 'package:skill_share_hub/services/notification_services.dart';
 import 'package:skill_share_hub/theme.dart';
+import 'package:skill_share_hub/views/call_views/audio_call.dart';
+import 'package:skill_share_hub/views/call_views/video_call.dart';
 import 'package:skill_share_hub/views/home_views/home.dart';
 import 'package:skill_share_hub/views/login_views/login.dart';
 // import 'package:skill_share_hub/providers/theme_provider.dart';
@@ -19,6 +22,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  late final CallNotificationService _notificationService;
   late final AgoraRepo _agoraService;
 
   @override
@@ -29,6 +34,51 @@ class _MyAppState extends State<MyApp> {
     _agoraService = AgoraRepo(
       baseUrl: baseUrl,
     );
+
+    // Access the UserProvider
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    // Initialize notification service with UserProvider
+    _notificationService = CallNotificationService(userProvider: userProvider);
+
+    // Initialize notification service
+    _initializeNotifications();
+  }
+
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+
+  //   // Access the UserProvider
+  //   final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+  //   // Initialize notification service with UserProvider
+  //   _notificationService = CallNotificationService(userProvider: userProvider);
+  //   _initializeNotifications();
+  // }
+
+  Future<void> _initializeNotifications() async {
+    await _notificationService.initialize(
+      onCallReceived: _handleIncomingCall,
+    );
+  }
+
+  void _handleIncomingCall(
+      String channelName, bool isVideo, String callerName) {
+    // Navigate to appropriate call screen
+    debugPrint("incoming callllll::::::::::::: " + channelName);
+    _navigatorKey.currentState?.push(MaterialPageRoute(
+      builder: (context) => ChangeNotifierProvider(
+        create: (context) => CallManagerProvider(),
+        child: isVideo
+            ? VideoCallScreen(channelName: channelName)
+            : AudioCallScreen(
+                channelName: channelName,
+                callerName: callerName,
+              ),
+      ),
+    ));
+    debugPrint("navigated to other page......");
   }
 
   @override
@@ -39,6 +89,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: ((context) => CallManagerProvider())),
       ],
       child: MaterialApp(
+        navigatorKey: _navigatorKey, // Add this line
         debugShowCheckedModeBanner: false,
         theme: theme,
         home: Consumer<UserProvider>(

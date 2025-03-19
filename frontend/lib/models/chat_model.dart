@@ -1,4 +1,5 @@
 // models/chat.dart
+import 'package:flutter/material.dart';
 import 'package:skill_share_hub/models/login_model.dart';
 import 'package:skill_share_hub/models/message_model.dart';
 
@@ -65,6 +66,16 @@ class Chat {
         (user) => user.id != currentUserId,
         orElse: () => participants.first,
       );
+      if (otherParticipant.profilePicture == null ||
+          otherParticipant.profilePicture!.isEmpty) {
+        debugPrint(
+            "other participants gender: " + (otherParticipant.gender ?? ''));
+        if (otherParticipant.gender != "Male") {
+          return 'https://img.freepik.com/premium-vector/conceptual-illustration-person-crossing-finish-line-with-determination_1263357-35011.jpg?ga=GA1.1.1483351532.1733847503&semt=ais_hybrid';
+        } else {
+          return 'https://img.freepik.com/premium-vector/career-woman-employee-ai-generated-image_362642-3848.jpg?ga=GA1.1.1483351532.1733847503&semt=ais_hybrid';
+        }
+      }
       return otherParticipant.profilePicture!;
     }
   }

@@ -8,6 +8,7 @@ import 'package:skill_share_hub/views/blocked_users.dart';
 import 'package:skill_share_hub/views/chat_views/chat_list_screen.dart';
 import 'package:skill_share_hub/views/home_views/chart.dart';
 import 'package:skill_share_hub/views/home_views/chat_bot.dart';
+import 'package:skill_share_hub/views/home_views/chat_bot_2.dart';
 import 'package:skill_share_hub/views/home_views/chat_menu.dart';
 import 'package:skill_share_hub/views/home_views/connections.dart';
 import 'package:skill_share_hub/views/home_views/explore.dart';
@@ -34,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: ColorsUtil.bgclr,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 35.0, vertical: 50),
+        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 50),
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -65,9 +66,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       InkWell(
                         onTap: () {
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const Chatbot()));
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ChatBot(),
+                            ),
+                          );
                         },
                         child: Container(
                           child: Image.asset("assets/images/chatbot.png"),
@@ -119,7 +122,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Container(
                           height: 30,
                           width: 30,
-                          child: Image.asset("assets/images/profile-pic1.png"),
+                          child: Icon(
+                            Icons.people_outline,
+                            color: ColorsUtil.primaryclr,
+                            size: 30,
+                          ),
                         ),
                       ),
                     ],
@@ -133,29 +140,37 @@ class _HomeScreenState extends State<HomeScreen> {
               //   decoration: const InputDecoration(
               //       hintText: "Search for a skill to learn..."),
               // ),
-              Container(
-                height: 50,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: ColorsUtil.borderclr,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Explore()),
+                  );
+                },
+                child: Container(
+                  height: 50,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: ColorsUtil.borderclr,
+                    ),
+                    borderRadius: BorderRadius.circular(40),
                   ),
-                  borderRadius: BorderRadius.circular(40),
-                ),
-                padding: EdgeInsets.only(left: 10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Search for a skill to learn..."),
-                  ],
+                  padding: EdgeInsets.only(left: 10),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Search for a skill to learn..."),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 30),
               Row(
                 children: [
                   Text(
-                    "Hi, Swaroop!",
+                    "Hi,${Provider.of<UserProvider>(context).user!.username}!",
                     style: theme.textTheme.headlineSmall,
                   ),
                 ],
@@ -177,51 +192,51 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 30),
-              Row(
-                children: [
-                  Text(
-                    "Continue Learning",
-                    style: theme.textTheme.bodyMedium!
-                        .copyWith(color: ColorsUtil.textclr),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
-              Container(
-                height: 80,
-                width: width,
-                padding: const EdgeInsets.all(15),
-                margin: const EdgeInsets.symmetric(horizontal: 5),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                          offset: const Offset(1, 1),
-                          spreadRadius: 3,
-                          blurRadius: 5,
-                          color: Colors.grey.shade300)
-                    ]),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Image.asset("assets/images/profile-pic1.png"),
-                    Text(
-                      "MongoDB",
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    Image.asset("assets/images/sync.png"),
-                    Text(
-                      "JavaScript",
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    Image.asset("assets/images/profile-pic2.png"),
-                  ],
-                ),
-              ),
+              // Row(
+              //   children: [
+              //     Text(
+              //       "Continue Learning",
+              //       style: theme.textTheme.bodyMedium!
+              //           .copyWith(color: ColorsUtil.textclr),
+              //     ),
+              //   ],
+              // ),
+              // const SizedBox(height: 15),
+              // Container(
+              //   height: 80,
+              //   width: width,
+              //   padding: const EdgeInsets.all(15),
+              //   margin: const EdgeInsets.symmetric(horizontal: 5),
+              //   decoration: BoxDecoration(
+              //       borderRadius: BorderRadius.circular(50),
+              //       color: Colors.white,
+              //       boxShadow: [
+              //         BoxShadow(
+              //             offset: const Offset(1, 1),
+              //             spreadRadius: 3,
+              //             blurRadius: 5,
+              //             color: Colors.grey.shade300)
+              //       ]),
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //     children: [
+              //       Image.asset("assets/images/profile-pic1.png"),
+              //       Text(
+              //         "MongoDB",
+              //         style: theme.textTheme.titleMedium,
+              //       ),
+              //       Image.asset("assets/images/sync.png"),
+              //       Text(
+              //         "JavaScript",
+              //         style: theme.textTheme.titleMedium,
+              //       ),
+              //       Image.asset("assets/images/profile-pic2.png"),
+              //     ],
+              //   ),
+              // ),
               const SizedBox(height: 35),
               Container(
-                height: 170,
+                // height: 170,
                 width: width,
                 padding: const EdgeInsets.all(25),
                 decoration: BoxDecoration(
@@ -245,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: theme.textTheme.titleLarge,
                       textAlign: TextAlign.center,
                     ),
-                    const Spacer(),
+                    // const Spacer(),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
@@ -271,17 +286,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   card_custom(
                     theme: theme,
-                    heading: "Skills shared & learned",
-                    txt: "12",
+                    heading: "Connections",
+                    txt: "3",
                   ),
                   const SizedBox(width: 15),
                   Container(
-                    height: 90,
                     width: 130,
-                    padding: const EdgeInsets.all(15),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
                       color: const Color(0xFFFFECA7),
+                      boxShadow: [
+                        BoxShadow(
+                          offset: const Offset(1, 1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          color: Colors.grey.shade200,
+                        )
+                      ],
                     ),
                     child: Column(
                       children: [
@@ -347,20 +369,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
-                    color: Colors.white,
+                    color: const Color.fromRGBO(255, 255, 255, 1),
                     boxShadow: [
                       BoxShadow(
-                        offset: const Offset(2, 2),
-                        blurRadius: 9,
-                        spreadRadius: 2,
+                        offset: const Offset(1, 1),
+                        spreadRadius: 1,
+                        blurRadius: 6,
                         color: Colors.grey.shade300,
-                      ),
-                      // BoxShadow(
-                      //   offset: Offset(-1, -1),
-                      //   blurRadius: 9,
-                      //   spreadRadius: 2,
-                      //   color: Colors.white,
-                      // )
+                      )
                     ],
                   ),
                   child: Column(
@@ -511,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               options: CarouselOptions(
                 height: 270,
-                viewportFraction: 0.95,
+                viewportFraction: 0.9,
                 autoPlay: true,
                 onPageChanged: (ind, reason) {
                   setState(() {
@@ -547,23 +563,23 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        SizedBox(height: 50),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => BlockedUsers(),
-              ),
-            );
-          },
-          child: Text(
-            "Blocked users",
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-        )
+        SizedBox(height: 20),
+        // ElevatedButton(
+        //   onPressed: () {
+        //     Navigator.push(
+        //       context,
+        //       MaterialPageRoute(
+        //         builder: (context) => BlockedUsers(),
+        //       ),
+        //     );
+        //   },
+        //   child: Text(
+        //     "Blocked users",
+        //     style: TextStyle(
+        //       color: Colors.white,
+        //     ),
+        //   ),
+        // )
       ],
     );
   }

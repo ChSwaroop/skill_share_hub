@@ -95,6 +95,7 @@ const UserSchema = new mongoose.Schema({
   // },
   connections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   pendingConnections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  fcmToken: { type: String },
   lastSeen: { type: Date, default: Date.now },
   isOnline: { type: Boolean, default: false },
   blockedUsers: [

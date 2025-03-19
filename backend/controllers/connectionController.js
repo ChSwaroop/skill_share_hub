@@ -182,3 +182,64 @@ exports.updateConnectionStatus = async (req, res) => {
 //         const user = await User.findById(userId).populate({
 //             path: 'connectionIds',
 //             populate: [{ path: 'recipientId', select: 'username profilePicture' }, { path: 'requesterId', select: 'username profilePicture' }, { path: 'skillId
+
+
+// Delete connection
+exports.deleteConnection = async (req, res) => {
+    try {
+        const { connectionId } = req.params;
+        const userId = req.user.userId;
+
+        // Find the connection
+        const connection = await Connection.findById(connectionId);
+
+        if (!connection) {
+            return res.status(404).json({
+                success: false,
+                error: 'Connection not found'
+            });
+        }
+
+        // Check if user is authorized to delete this connection
+        if (connection.requesterId.toString() !== userId &&
+            connection.recipientId.toString() !== userId) {
+            return res.status(403).json({
+                success: false,
+                error: 'Unauthorized to delete this connection'
+            });
+        }
+
+        // Get the other user's ID
+        const otherUserId = connection.requesterId.toString() === userId
+            ? connection.recipientId
+            : connection.requesterId;
+
+        // Delete the connection
+        await Connection.findByIdAndDelete(connectionId);
+
+        // Remove connection references from both users
+        await User.findByIdAndUpdate(userId, {
+            $pull: {
+                connections: otherUserId,
+                pendingConnections: otherUserId
+            }
+        });
+
+        await User.findByIdAndUpdate(otherUserId, {
+            $pull: {
+                connections: userId,
+                pendingConnections: userId
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Connection deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};

@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:skill_share_hub/colors.dart';
 import 'package:skill_share_hub/models/user_search_model.dart';
 import 'package:skill_share_hub/providers/user_provider.dart';
 import 'package:skill_share_hub/repo/connection_repo.dart';
 import 'package:skill_share_hub/repo/search_repo.dart';
+import 'package:skill_share_hub/views/util/custom_carousel_view.dart';
+import 'package:skill_share_hub/views/util/shimmer_user.dart';
 
 class Explore extends StatefulWidget {
   const Explore({super.key});
@@ -18,8 +21,35 @@ class Explore extends StatefulWidget {
 
 class _ExploreState extends State<Explore> {
   int curCardIndex = 0;
-  int curCardIndex2 = 0;
   List<User> searchResults = [];
+  bool isSearching = false;
+
+  Future<void> _performSearch(String query) async {
+    setState(() {
+      isSearching = true;
+    });
+
+    debugPrint("Searching for: $query");
+    // Call your API service here
+    final data = await UserService().searchUsersBySkill(
+        query, Provider.of<UserProvider>(context, listen: false).token!);
+    if (data != null && data.users != null) {
+      setState(() {
+        searchResults = data.users!;
+      });
+    }
+
+    setState(() {
+      isSearching = false;
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _performSearch("flu");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,18 +59,6 @@ class _ExploreState extends State<Explore> {
     TextEditingController search = TextEditingController();
 
     Timer? _debounceTimer;
-
-    Future<void> _performSearch(String query) async {
-      debugPrint("Searching for: $query");
-      // Call your API service here
-      final data = await UserService().searchUsersBySkill(
-          query, Provider.of<UserProvider>(context, listen: false).token!);
-      if (data != null && data.users != null) {
-        setState(() {
-          searchResults = data.users!;
-        });
-      }
-    }
 
     void _onSearchChanged(String query) {
       // Cancel previous timer if still running
@@ -84,6 +102,7 @@ class _ExploreState extends State<Explore> {
               ),
               const SizedBox(height: 25),
               TextFormField(
+                autofocus: true,
                 style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
                 decoration: const InputDecoration(
                     hintText: "search for a skill to learn..."),
@@ -111,7 +130,9 @@ class _ExploreState extends State<Explore> {
                 ),
               ),
               const SizedBox(height: 16),
-              details_card(width, theme, searchResults),
+              (isSearching)
+                  ? ShimmerUser()
+                  : CustomUsersView(users: searchResults),
               const SizedBox(height: 44),
               Text(
                 "Recommended for you",
@@ -121,245 +142,11 @@ class _ExploreState extends State<Explore> {
                 ),
               ),
               const SizedBox(height: 16),
-              details_card(width, theme, searchResults),
+              // details_card(width, theme, searchResults),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Column details_card(double width, ThemeData theme, List<User> searchResults) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 270,
-          width: width,
-          child: Center(
-            child: (searchResults.length == 0)
-                ? Center(
-                    child: Text(
-                      "No users found with this skill",
-                      style: theme.textTheme.titleMedium,
-                    ),
-                  )
-                : CarouselSlider.builder(
-                    itemCount: searchResults.length,
-                    itemBuilder: (context, ind, j) {
-                      var skills = searchResults[ind].skills;
-                      if (skills != null && skills.length > 3) {
-                        skills = [skills[0], skills[1], skills[2]];
-                      }
-
-                      return Container(
-                        height: 250,
-                        width: width - 100,
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 5.0),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              offset: const Offset(2, 2),
-                              blurRadius: 9,
-                              spreadRadius: 2,
-                              color: Colors.grey.shade300,
-                            ),
-                            // BoxShadow(
-                            //   offset: Offset(-1, -1),
-                            //   blurRadius: 9,
-                            //   spreadRadius: 2,
-                            //   color: Colors.white,
-                            // )
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  height: 20,
-                                  width: 38,
-                                  decoration: BoxDecoration(
-                                    border:
-                                        Border.all(color: ColorsUtil.borderclr),
-                                    borderRadius: BorderRadius.circular(360),
-                                  ),
-                                  // padding: EdgeInsets.all(3),
-                                  child: Center(
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.star,
-                                          color: Colors.yellow,
-                                          size: 15,
-                                        ),
-                                        Text(
-                                          "4.2",
-                                          style: theme.textTheme.bodySmall!
-                                              .copyWith(
-                                            fontSize: 11,
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 9),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  searchResults[ind].firstName ??
-                                      searchResults[ind].username ??
-                                      "",
-                                  style: theme.textTheme.titleMedium,
-                                ),
-                                (searchResults[ind].profilePicture != null &&
-                                        searchResults[ind]
-                                            .profilePicture!
-                                            .isNotEmpty)
-                                    ? Image.network(
-                                        searchResults[ind].profilePicture!,
-                                      )
-                                    : Image.asset("assets/images/cardpic.png"),
-                              ],
-                            ),
-                            const SizedBox(height: 15),
-                            const Divider(
-                              color: Color(0xFFD9D9D9),
-                            ),
-                            const SizedBox(height: 7),
-                            Row(
-                              children: [
-                                Text(
-                                  "skills",
-                                  style: theme.textTheme.bodySmall!.copyWith(
-                                      color:
-                                          const Color.fromARGB(255, 62, 61, 61),
-                                      fontSize: 12),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 7),
-                            (skills != null)
-                                ? Column(
-                                    children: [
-                                      ...skills.map(
-                                        (skill) => Row(
-                                          children: [
-                                            Container(
-                                              height: 5,
-                                              width: 5,
-                                              decoration: const BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: Color.fromARGB(
-                                                    255, 62, 61, 61),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 7),
-                                            Text(
-                                              skill.name ?? "",
-                                              style: theme.textTheme.bodySmall!
-                                                  .copyWith(
-                                                color: Color.fromARGB(
-                                                    255, 62, 61, 61),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  )
-                                : SizedBox(),
-                            const Spacer(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      fixedSize: Size((width - 150) / 2, 30),
-                                      backgroundColor: Colors.white),
-                                  onPressed: () {},
-                                  child: Text(
-                                    "Know more",
-                                    style: theme.textTheme.titleMedium!
-                                        .copyWith(color: ColorsUtil.primaryclr),
-                                  ),
-                                ),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    fixedSize: Size((width - 150) / 2, 30),
-                                  ),
-                                  onPressed: () async {
-                                    final response =
-                                        await ConnectionRepo().createConnection(
-                                      recipientId: searchResults[ind].id!,
-                                      authToken: Provider.of<UserProvider>(
-                                              context,
-                                              listen: false)
-                                          .token!,
-                                    );
-                                  },
-                                  child: Text(
-                                    "Connect",
-                                    style: theme.textTheme.titleMedium!
-                                        .copyWith(color: Colors.white),
-                                  ),
-                                )
-                              ],
-                            )
-                          ],
-                        ),
-                      );
-                    },
-                    options: CarouselOptions(
-                      enableInfiniteScroll: false,
-                      height: 270,
-                      viewportFraction: 0.95,
-                      autoPlay: false,
-                      onPageChanged: (ind, reason) {
-                        setState(() {
-                          curCardIndex = ind;
-                        });
-                      },
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 28),
-        SizedBox(
-          height: 7,
-          width: width,
-          child: Center(
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: searchResults.length,
-              shrinkWrap: true,
-              itemBuilder: (context, ind) {
-                return Container(
-                  height: 7,
-                  width: (curCardIndex == ind) ? 16 : 7,
-                  margin: const EdgeInsets.only(right: 7),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: (curCardIndex == ind)
-                        ? ColorsUtil.primaryclr
-                        : const Color(0xFFD9D9D9),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

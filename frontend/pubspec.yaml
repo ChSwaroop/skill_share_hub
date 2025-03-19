@@ -45,6 +45,12 @@ dependencies:
   socket_io_client:
   agora_rtc_engine: # For video/audio calls
   permission_handler: # For handling permissions
+  firebase_messaging: ^14.7.19
+  flutter_local_notifications: ^18.0.1
+  firebase_core: ^2.27.0
+  firebase_analytics: ^10.8.9
+  dash_chat_2:
+  flutter_gemini:
 
 dev_dependencies:
   flutter_test:

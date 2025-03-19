@@ -15,4 +15,7 @@ router.post('/', authMiddleware, connectionController.createConnection);
 // Update connection status (Accept, Reject, Cancel)
 router.put('/:connectionId/status', authMiddleware, connectionController.updateConnectionStatus);
 
+// Delete a connection
+router.delete('/:connectionId', authMiddleware, connectionController.deleteConnection);
+
 module.exports = router;

@@ -4,7 +4,7 @@ class ColorsUtil {
   static const primaryclr = Color(0xFFEE495C);
   static const secondaryclr = Color(0xFFEB919B);
   static const textclr = Color(0xFF3D3D3D);
-  static const secondarytxtclr = Color.fromARGB(133, 187, 187, 187);
+  static const secondarytxtclr = Color.fromARGB(133, 97, 83, 83);
   static const borderclr = Color(0xFFC6C6C6);
   static const barclr = Color(0xFFE9E9E9);
   static const btntxtclr = Colors.white;

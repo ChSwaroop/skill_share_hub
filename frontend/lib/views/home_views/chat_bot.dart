@@ -1,22 +1,34 @@
+import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:provider/provider.dart';
 import 'package:skill_share_hub/colors.dart';
+import 'package:skill_share_hub/providers/user_provider.dart';
 
-class Chatbot extends StatefulWidget {
-  const Chatbot({super.key});
+class ChatBot extends StatefulWidget {
+  const ChatBot({super.key});
 
   @override
-  State<Chatbot> createState() => _ChatbotState();
+  State<ChatBot> createState() => _ChatBotState();
 }
 
-class _ChatbotState extends State<Chatbot> {
+class _ChatBotState extends State<ChatBot> {
+  List<ChatMessage> messages = [];
+  final Gemini gemini = Gemini.instance;
+  ChatUser currentUser = ChatUser(id: "user", firstName: "Swaroop");
+  ChatUser geminiUser = ChatUser(id: "model", firstName: "ChatBot");
+  bool isThinking = false;
+
+  // final String systemPrompt =
+  //     "You are a helpful assistant specialized in education. Answer only questions related to education. If a question is outside the scope of education, respond with 'I can only answer questions related to education.'";
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    double height = MediaQuery.of(context).size.height;
-    double width = MediaQuery.of(context).size.width;
+    final user = Provider.of<UserProvider>(context).user!.username;
+    currentUser.firstName = user;
 
     return Scaffold(
-      backgroundColor: ColorsUtil.bgclr,
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -28,117 +40,92 @@ class _ChatbotState extends State<Chatbot> {
         ),
         title: Text(
           "Help Bot !",
-          style: theme.textTheme.bodyMedium!
-              .copyWith(color: const Color(0xFF1E1E1E), fontWeight: FontWeight.bold),
+          style: theme.textTheme.bodyMedium!.copyWith(
+              color: const Color(0xFF1E1E1E), fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 25,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(
-                height: height - 180,
-                width: width,
-                child: ListView.builder(
-                  itemCount: 3,
-                  itemBuilder: (context, ind) {
-                    return Row(
-                      mainAxisAlignment: (ind % 2 == 0)
-                          ? MainAxisAlignment.start
-                          : MainAxisAlignment.end,
-                      children: [
-                        Stack(
-                          alignment: const Alignment(-0.8, -1),
-                          children: [
-                            Container(
-                              height: 85,
-                              width: width / 1.5,
-                              margin: const EdgeInsets.symmetric(vertical: 15),
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: ColorsUtil.primaryclr,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  "hi ! Im here to help. Could you tell me a bit about the skill share hub and the components",
-                                  style: theme.textTheme.bodyLarge!
-                                      .copyWith(color: Colors.white),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              height: 34,
-                              width: 34,
-                              decoration: const BoxDecoration(
-                                color: ColorsUtil.primaryclr,
-                                shape: BoxShape.circle,
-                              ),
-                              child: (ind % 2 == 0)
-                                  ? Image.asset("assets/images/smallbot.png")
-                                  : const SizedBox(),
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
+        padding: const EdgeInsets.all(8.0),
+        child: DashChat(
+          inputOptions: InputOptions(
+            alwaysShowSend: true,
+            inputTextStyle: theme.textTheme.bodyMedium!.copyWith(
+              color: Colors.black,
+            ),
+            inputDecoration: InputDecoration(
+              labelStyle: TextStyle(
+                color: Colors.black,
+              ),
+              contentPadding:
+                  EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+              hintText: "Type something...",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(360),
+                borderSide: BorderSide(
+                  color: ColorsUtil.primaryclr,
                 ),
               ),
-              Container(
-                height: 54,
-                width: width,
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: ColorsUtil.primaryclr),
-                    borderRadius: BorderRadius.circular(40)),
-                padding: const EdgeInsets.all(8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      height: 39,
-                      width: 49,
-                      decoration: const BoxDecoration(
-                        color: ColorsUtil.primaryclr,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Image.asset("assets/images/smallcam.png"),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextFormField(
-                        style: theme.textTheme.bodyLarge!
-                            .copyWith(color: Colors.black),
-                        decoration: const InputDecoration(
-                            contentPadding:
-                                EdgeInsets.symmetric(vertical: 15.0),
-                            hintText: "Type something...",
-                            border: InputBorder.none,
-                            focusedBorder: InputBorder.none),
-                        cursorColor: ColorsUtil.primaryclr,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Image.asset("assets/images/gallery.png"),
-                        const SizedBox(width: 8),
-                        Image.asset("assets/images/mic.png"),
-                        const SizedBox(width: 8),
-                      ],
-                    )
-                  ],
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(360),
+                borderSide: BorderSide(
+                  color: ColorsUtil.primaryclr,
                 ),
               ),
-            ],
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(360),
+                borderSide: BorderSide(
+                  color: ColorsUtil.primaryclr,
+                ),
+              ),
+            ),
+            cursorStyle: CursorStyle(
+              color: ColorsUtil.primaryclr,
+            ),
+            sendOnEnter: true,
           ),
+          typingUsers: (isThinking) ? [geminiUser] : [],
+          messageListOptions: MessageListOptions(typingBuilder: (user) {
+            return const Text("Thinking...");
+          }),
+          messageOptions: MessageOptions(
+            currentUserContainerColor: ColorsUtil.primaryclr,
+            currentUserTextColor: ColorsUtil.btntxtclr,
+          ),
+          currentUser: currentUser,
+          onSend: onSend,
+          messages: messages,
         ),
       ),
     );
+  }
+
+  void onSend(ChatMessage message) {
+    debugPrint(message.text);
+    messages = [message, ...messages];
+    setState(() {
+      isThinking = true;
+    });
+
+    List<Content> chatHistory = [
+      // Content(parts: [Part.text(systemPrompt)], role: "model"),
+      ...messages.reversed.map((message) {
+        return Content(parts: [Part.text(message.text)], role: message.user.id);
+      }).toList(),
+    ];
+
+    gemini.chat(chatHistory).then((value) {
+      setState(() {
+        messages = [
+          ChatMessage(
+              user: geminiUser,
+              createdAt: DateTime.now(),
+              text: value!.output ?? ""),
+          ...messages
+        ];
+        isThinking = false;
+      });
+    });
+    setState(() {});
   }
 }
