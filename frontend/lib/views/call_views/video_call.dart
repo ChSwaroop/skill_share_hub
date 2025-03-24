@@ -7,6 +7,7 @@ import 'package:skill_share_hub/providers/call_manager_provider.dart';
 import 'dart:async';
 
 import 'package:skill_share_hub/repo/agora_repo.dart';
+import 'package:skill_share_hub/repo/call_repo.dart';
 
 class VideoCallScreen extends StatefulWidget {
   final String channelName;
@@ -30,8 +31,22 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 
   @override
   void initState() {
+    // Listen for call status changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final callManager =
+          Provider.of<CallManagerProvider>(context, listen: false);
+      callManager.addListener(_handleCallStatusChange);
+    });
     super.initState();
     _initializeCall();
+  }
+
+  void _handleCallStatusChange() {
+    final callManager =
+        Provider.of<CallManagerProvider>(context, listen: false);
+    if (callManager.status == CallStatus.idle && mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<void> _initializeCall() async {
@@ -65,6 +80,14 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         });
       }
     }
+  }
+
+  @override
+  void dispose() {
+    final callManager =
+        Provider.of<CallManagerProvider>(context, listen: false);
+    callManager.removeListener(_handleCallStatusChange);
+    super.dispose();
   }
 
   @override
@@ -231,8 +254,16 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             icon: Icons.call_end,
             color: Colors.red,
             onPressed: () {
-              callManager.leaveCall();
-              Navigator.pop(context);
+              // callManager.leaveCall();
+              // Navigator.pop(context);
+              final callRepo = Provider.of<CallRepo>(context, listen: false);
+              final callManager =
+                  Provider.of<CallManagerProvider>(context, listen: false);
+
+              callRepo.endCall(
+                context: context,
+                channelName: widget.channelName,
+              );
             },
             isEndCall: true,
           ),
@@ -280,7 +311,10 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         color: isEndCall ? Colors.red : Colors.black45,
       ),
       child: IconButton(
-        icon: Icon(icon),
+        icon: Icon(
+          icon,
+          color: Colors.white,
+        ),
         color: color,
         iconSize: isEndCall ? 32 : 28,
         onPressed: onPressed,

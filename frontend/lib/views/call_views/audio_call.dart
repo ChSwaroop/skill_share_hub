@@ -5,6 +5,7 @@ import 'package:skill_share_hub/providers/call_manager_provider.dart';
 import 'dart:async';
 
 import 'package:skill_share_hub/repo/agora_repo.dart';
+import 'package:skill_share_hub/repo/call_repo.dart';
 
 class AudioCallScreen extends StatefulWidget {
   final String channelName;
@@ -34,6 +35,12 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
   @override
   void initState() {
     super.initState();
+    // Listen for call status changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final callManager =
+          Provider.of<CallManagerProvider>(context, listen: false);
+      callManager.addListener(_handleCallStatusChange);
+    });
     debugPrint(
         "IN audio call page : " + widget.callerName + " " + widget.channelName);
     _initializeCall();
@@ -55,9 +62,20 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
 
   @override
   void dispose() {
+    final callManager =
+        Provider.of<CallManagerProvider>(context, listen: false);
+    callManager.removeListener(_handleCallStatusChange);
     _timer.cancel();
     _stopwatch.stop();
     super.dispose();
+  }
+
+  void _handleCallStatusChange() {
+    final callManager =
+        Provider.of<CallManagerProvider>(context, listen: false);
+    if (callManager.status == CallStatus.idle && mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<void> _initializeCall() async {
@@ -217,8 +235,19 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
                         // End call button
                         GestureDetector(
                           onTap: () {
-                            callManager.leaveCall();
-                            Navigator.pop(context);
+                            // callManager.leaveCall();
+                            // Navigator.pop(context);
+                            // final callRepo =
+                            //     Provider.of<CallRepo>(context, listen: false);
+                            // final callManager =
+                            //     Provider.of<CallManagerProvider>(context,
+                            //         listen: false);
+                            final callRepo = new CallRepo(
+                                agoraService: AgoraRepo(baseUrl: baseUrl));
+                            callRepo.endCall(
+                              context: context,
+                              channelName: widget.channelName,
+                            );
                           },
                           child: Container(
                             width: 70,

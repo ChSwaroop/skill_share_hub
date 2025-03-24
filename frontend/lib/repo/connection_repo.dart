@@ -20,6 +20,7 @@ class ConnectionRepo {
       debugPrint("$status connections: " + response.body);
       return Connection.fromJson(json.decode(response.body));
     } else {
+      debugPrint("connections: " + response.body);
       throw Exception('Failed to load connections');
     }
   }

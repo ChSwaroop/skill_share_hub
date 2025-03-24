@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:skill_share_hub/constants.dart';
 import 'package:skill_share_hub/providers/call_manager_provider.dart';
 import 'package:skill_share_hub/providers/chat_provider.dart';
+import 'package:skill_share_hub/providers/todo_provider.dart';
 import 'package:skill_share_hub/providers/user_provider.dart';
 import 'package:skill_share_hub/repo/agora_repo.dart';
+import 'package:skill_share_hub/repo/todorepo.dart';
 import 'package:skill_share_hub/services/notification_services.dart';
 import 'package:skill_share_hub/theme.dart';
 import 'package:skill_share_hub/views/call_views/audio_call.dart';
@@ -87,6 +89,15 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider(create: ((context) => ChatProvider())),
         ChangeNotifierProvider(create: ((context) => CallManagerProvider())),
+        ChangeNotifierProvider(
+          create: (context) => TodoProvider(
+            repository: TodoRepository(
+              baseUrl: '$baseUrl/api',
+              token: Provider.of<UserProvider>(context, listen: false)
+                  .token!, // You should get this from secure storage
+            ),
+          ),
+        ),
       ],
       child: MaterialApp(
         navigatorKey: _navigatorKey, // Add this line

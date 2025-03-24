@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:skill_share_hub/repo/agora_repo.dart';
 
 enum CallStatus { idle, connecting, connected, disconnected }
 
@@ -99,7 +100,17 @@ class CallManagerProvider extends ChangeNotifier {
           }
         },
         onUserOffline: (connection, uid, reason) {
-          _remoteUsers.remove(uid);
+          // _remoteUsers.remove(uid);
+          // For 1-to-1 calls, if the remote user leaves, end the call
+          if (_remoteUsers.isEmpty && _channelName != null) {
+            // Call leaveCall without backend notification since we're just responding
+            // to the other user leaving
+            leaveCall();
+
+            // If this happens in a screen, you might want to pop back
+            // This requires a BuildContext, so you might need a different approach
+            // like using a callback or stream to notify screens
+          }
           notifyListeners();
         },
         onTokenPrivilegeWillExpire: (connection, token) {
@@ -164,8 +175,35 @@ class CallManagerProvider extends ChangeNotifier {
   }
 
   // Leave call
-  Future<void> leaveCall() async {
+  // Future<void> leaveCall() async {
+  //   if (_engine != null) {
+  //     await _engine!.leaveChannel();
+  //     _status = CallStatus.disconnected;
+  //     _remoteUsers.clear();
+  //     notifyListeners();
+
+  //     // Destroy the engine instance
+  //     await _engine!.release();
+  //     _engine = null;
+
+  //     // Reset state
+  //     _status = CallStatus.idle;
+  //     _channelName = null;
+  //     _token = null;
+  //     notifyListeners();
+  //   }
+  // }
+  // In CallManagerProvider class
+  Future<void> leaveCall({AgoraRepo? agoraRepo, String? userId}) async {
     if (_engine != null) {
+      // Call the backend to end the call if agoraRepo and userId are provided
+      if (agoraRepo != null && userId != null && _channelName != null) {
+        await agoraRepo.endCall(
+          channelName: _channelName!,
+          userId: userId,
+        );
+      }
+
       await _engine!.leaveChannel();
       _status = CallStatus.disconnected;
       _remoteUsers.clear();

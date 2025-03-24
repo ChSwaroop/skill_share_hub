@@ -59,4 +59,35 @@ class AgoraRepo {
       throw Exception('Failed to start call: $e');
     }
   }
+
+//   // In AgoraRepo class
+// import 'package:http/http.dart' as http;
+// import 'dart:convert';
+
+  Future<bool> endCall({
+    required String channelName,
+    required String userId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}/api/end-call'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'channelName': channelName,
+          'userId': userId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] ?? false;
+      }
+      return false;
+    } catch (e) {
+      print('Error ending call: $e');
+      return false;
+    }
+  }
 }

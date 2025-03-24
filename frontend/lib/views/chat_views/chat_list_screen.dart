@@ -224,7 +224,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const GroupScreen(),
+                    builder: (context) => const CreateGroupChatScreen(),
                   ),
                 );
               },

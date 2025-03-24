@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:skill_share_hub/colors.dart';
 import 'package:skill_share_hub/models/connection_model.dart';
 import 'package:skill_share_hub/providers/user_provider.dart';
+import 'package:skill_share_hub/views/analysis_graphs/analysis.dart';
+import 'package:skill_share_hub/views/analysis_graphs/line_chart.dart';
+import 'package:skill_share_hub/views/analysis_graphs/trail2_CHART.dart';
 import 'package:skill_share_hub/views/blocked_users.dart';
 import 'package:skill_share_hub/views/chat_views/chat_list_screen.dart';
 import 'package:skill_share_hub/views/home_views/chart.dart';
@@ -329,6 +332,13 @@ class _HomeScreenState extends State<HomeScreen> {
               //   child: LineChartSample(),
               // ),
               Image.asset("assets/images/graph.png"),
+              SizedBox(height: 20),
+              TextButton(
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => TrailChart()));
+                  },
+                  child: Text("View more")),
               const SizedBox(height: 60),
               Row(
                 children: [

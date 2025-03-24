@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:skill_share_hub/constants.dart';
 import 'package:skill_share_hub/providers/call_manager_provider.dart';
 import 'package:skill_share_hub/providers/user_provider.dart';
 import 'package:skill_share_hub/repo/agora_repo.dart';
 import 'package:skill_share_hub/views/call_views/audio_call.dart';
 import 'package:skill_share_hub/views/call_views/video_call.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CallRepo {
   final AgoraRepo _agoraService;
@@ -100,6 +103,37 @@ class CallRepo {
           ],
         ),
       );
+    }
+  }
+
+  // In CallRepo class
+  Future<void> endCall({
+    required BuildContext context,
+    required String channelName,
+  }) async {
+    try {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final callManager =
+          Provider.of<CallManagerProvider>(context, listen: false);
+
+      // End call on backend
+      await _agoraService.endCall(
+        channelName: channelName,
+        userId: userProvider.user!.id!,
+      );
+
+      // Leave call in Agora SDK
+      await callManager.leaveCall();
+
+      // Navigate back
+      Navigator.of(context).pop();
+    } catch (e) {
+      print('Error ending call: $e');
+      // Still try to leave call locally even if backend fails
+      final callManager =
+          Provider.of<CallManagerProvider>(context, listen: false);
+      await callManager.leaveCall();
+      Navigator.of(context).pop();
     }
   }
 }

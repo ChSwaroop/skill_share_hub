@@ -163,14 +163,50 @@ const MessageSchema = new mongoose.Schema({
 });
 
 // TODO Schema
+// const TodoSchema = new mongoose.Schema({
+//   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+//   tasks: [{
+//     task: { type: String },
+//     isCompleted: { type: Boolean, default: false },
+//     createdAt: { type: Date, default: Date.now }
+//   }]
+// });
+// models/Todo.js
+
 const TodoSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  tasks: [{
-    task: { type: String },
-    isCompleted: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now }
-  }]
-});
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    trim: true
+  },
+  completed: {
+    type: Boolean,
+    default: false
+  },
+  dueDate: {
+    type: Date
+  },
+  notificationSent: {
+    fifteenMin: {
+      type: Boolean,
+      default: false
+    },
+    fiveMin: {
+      type: Boolean,
+      default: false
+    }
+  }
+}, { timestamps: true });
+
 
 // Feedback Schema
 const FeedbackSchema = new mongoose.Schema({
