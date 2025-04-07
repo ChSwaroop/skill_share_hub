@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:skill_share_hub/constants.dart';
+import 'package:skill_share_hub/models/call_stats_model.dart';
 import 'package:skill_share_hub/models/messageStatsModel.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,6 +22,25 @@ class StatsRepo {
       }
     } catch (err) {
       debugPrint("Error fetching message stats: ${err.toString()}");
+      return null;
+    }
+  }
+
+  Future<CallStats?> getCallStats(String userId, int number) async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/api/call-stats/$userId/?days=$number'));
+
+      if (response.statusCode == 200) {
+        debugPrint("call stats in repo: ${response.body}");
+        final data = callStatsFromJson(response.body);
+        return data;
+      } else {
+        debugPrint("Error fetching call stats: " + response.body);
+        return null;
+      }
+    } catch (err) {
+      debugPrint("Error fetching call stats: ${err.toString()}");
       return null;
     }
   }

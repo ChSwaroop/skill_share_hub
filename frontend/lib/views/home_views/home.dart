@@ -6,7 +6,7 @@ import 'package:skill_share_hub/models/connection_model.dart';
 import 'package:skill_share_hub/providers/user_provider.dart';
 import 'package:skill_share_hub/views/analysis_graphs/analysis.dart';
 import 'package:skill_share_hub/views/analysis_graphs/line_chart.dart';
-import 'package:skill_share_hub/views/analysis_graphs/trail2_CHART.dart';
+import 'package:skill_share_hub/views/analysis_graphs/message_chart_data_call.dart';
 import 'package:skill_share_hub/views/blocked_users.dart';
 import 'package:skill_share_hub/views/chat_views/chat_list_screen.dart';
 import 'package:skill_share_hub/views/home_views/chart.dart';

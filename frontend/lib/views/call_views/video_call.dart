@@ -256,10 +256,17 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             onPressed: () {
               // callManager.leaveCall();
               // Navigator.pop(context);
-              final callRepo = Provider.of<CallRepo>(context, listen: false);
-              final callManager =
-                  Provider.of<CallManagerProvider>(context, listen: false);
+              // final callRepo = Provider.of<CallRepo>(context, listen: false);
+              // // final callManager =
+              // //     Provider.of<CallManagerProvider>(context, listen: false);
 
+              // callRepo.endCall(
+              //   context: context,
+              //   channelName: widget.channelName,
+              // );
+
+              final callRepo =
+                  new CallRepo(agoraService: AgoraRepo(baseUrl: baseUrl));
               callRepo.endCall(
                 context: context,
                 channelName: widget.channelName,

@@ -12,9 +12,13 @@ const skillRoutes = require('./routes/skillRoutes')
 const connectionRoutes = require('./routes/connection');
 const admin = require('firebase-admin');
 const mongoose = require('mongoose')
+const Call = require('./models/Call')
+const UserActivity = require('./models/userActivity');
 
+const startNotificationScheduler = require('./utils/notificationScheduler');
 const { RtcTokenBuilder, RtcRole } = require('agora-access-token');
 const chatRoutes = require('./routes/chatRoutes');
+const userStatsRoutes = require('./routes/userStatsRoutes'); // New route file
 
 
 const app = express();
@@ -28,7 +32,13 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/connections', connectionRoutes);
-app.use('/api/chats', chatRoutes);
+app.use('/api/chats', chatRoutes);// Mount routers
+app.use('/api/todos', require('./routes/todoRoutes'));
+app.use('/api/stats', userStatsRoutes); // New stats routes
+// Add your other routes here (users, auth, etc.)
+
+// Start notification scheduler
+// startNotificationScheduler();
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
@@ -536,16 +546,240 @@ startServer();
 /////////////callss----------
 
 // Call Schema to track active calls
-const callSchema = new mongoose.Schema({
-  channelName: { type: String, required: true, unique: true },
-  callType: { type: String, required: true }, // 'audio' or 'video'
-  initiator: { type: String, required: true }, // userId of the caller
-  participants: [{ type: String }], // array of userIds
-  startTime: { type: Date, default: Date.now },
-  active: { type: Boolean, default: true }
-});
+// const callSchema = new mongoose.Schema({
+//   channelName: { type: String, required: true, unique: true },
+//   callType: { type: String, required: true }, // 'audio' or 'video'
+//   initiator: { type: String, required: true }, // userId of the caller
+//   participants: [{ type: String }], // array of userIds
+//   startTime: { type: Date, default: Date.now },
+//   active: { type: Boolean, default: true }
+// });
 
-const Call = mongoose.model('Call', callSchema);
+// const Call = mongoose.model('Call', callSchema);
+
+// // Agora configuration
+// const APP_ID = process.env.AGORA_APP_ID;
+// const APP_CERTIFICATE = process.env.AGORA_APP_CERTIFICATE;
+
+// // API endpoint to register or update a user's FCM token
+// app.post('/api/register-device', async (req, res) => {
+//   try {
+//     const { userId, username, fcmToken } = req.body;
+
+//     if (!userId || !fcmToken) {
+//       return res.status(400).json({ error: 'User ID and FCM token are required' });
+//     }
+
+//     // Update user info in the database, or create if not exists
+//     await User.findByIdAndUpdate(
+//       userId,
+//       { fcmToken, lastUpdated: Date.now() },
+//       { upsert: true, new: true }
+//     );
+
+//     return res.json({ success: true });
+//   } catch (error) {
+//     console.error('Error registering device:', error);
+//     return res.status(500).json({ error: 'Failed to register device' });
+//   }
+// });
+
+// // Generate an RTC token
+// app.post('/api/rtc-token', (req, res) => {
+//   console.log("Request for token received");
+//   try {
+//     const { channelName, uid, role, expirationTimeInSeconds = 3600 } = req.body;
+
+//     if (!channelName) {
+//       return res.status(400).json({ error: 'Channel name is required' });
+//     }
+
+//     // Role can be either 'publisher' or 'subscriber'
+//     const selectedRole = role === 'subscriber' ? RtcRole.SUBSCRIBER : RtcRole.PUBLISHER;
+
+//     // Set expiration time
+//     const currentTimestamp = Math.floor(Date.now() / 1000);
+//     const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
+
+//     // Build token
+//     const token = RtcTokenBuilder.buildTokenWithUid(
+//       APP_ID,
+//       APP_CERTIFICATE,
+//       channelName,
+//       uid || 0, // 0 means use the Agora assigned uid
+//       selectedRole,
+//       privilegeExpiredTs
+//     );
+
+//     console.log("Token generated: " + token.substring(0, 10) + "...");
+
+//     return res.json({ token, uid: uid || 0, channelName });
+//   } catch (error) {
+//     console.error('Error generating token:', error);
+//     return res.status(500).json({ error: 'Failed to generate token' });
+//   }
+// });
+
+// // Get active calls for a user
+// app.get('/api/active-calls', async (req, res) => {
+//   try {
+//     const { userId } = req.query;
+
+//     if (!userId) {
+//       return res.status(400).json({ error: 'User ID is required' });
+//     }
+
+//     // Find all active calls where the user is a participant
+//     const activeCalls = await Call.find({
+//       participants: userId,
+//       active: true
+//     });
+
+//     return res.json({ activeCalls });
+//   } catch (error) {
+//     console.error('Error fetching active calls:', error);
+//     return res.status(500).json({ error: 'Failed to fetch active calls' });
+//   }
+// });
+
+// // Send FCM notification
+// async function sendCallNotification(recipientUserId, callData) {
+//   try {
+//     // Find the recipient's FCM token
+//     const recipient = await User.findById(recipientUserId);
+//     console.log("receipient: " + recipient);
+
+//     if (!recipient || !recipient.fcmToken) {
+//       console.error(`No FCM token found for user: ${recipientUserId}`);
+//       return false;
+//     }
+
+//     // Get caller information
+//     const caller = await User.findById(callData.callerId);
+//     const callerName = caller ? caller.username : 'Unknown Caller';
+
+//     // Prepare notification message
+//     const message = {
+//       data: {
+//         type: 'call',
+//         channelName: callData.channelName,
+//         isVideo: (callData.callType === 'video').toString(),
+//         callerName: callerName
+//       },
+//       android: {
+//         priority: 'high',
+//         notification: {
+//           channelId: 'call_channel'
+//         }
+//       },
+//       apns: {
+//         payload: {
+//           aps: {
+//             contentAvailable: true,
+//             sound: 'incoming_call.aiff',
+//             category: 'call'
+//           }
+//         }
+//       },
+//       token: recipient.fcmToken
+//     };
+
+//     // Send the notification
+//     const response = await admin.messaging().send(message);
+//     console.log(`Notification sent to ${recipientUserId}, response:`, response);
+//     return true;
+//   } catch (error) {
+//     console.error('Error sending notification:', error);
+//     return false;
+//   }
+// }
+
+// // Start a new call
+// app.post('/api/start-call', async (req, res) => {
+//   try {
+//     const { callerId, callType, participants } = req.body;
+//     console.log("callerId: " + callerId);
+//     console.log("callType: " + callType);
+//     console.log("participants: " + participants);
+
+//     if (!callerId || !callType || !participants || !Array.isArray(participants)) {
+//       return res.status(400).json({ error: 'Caller ID, call type, and participants array are required' });
+//     }
+
+//     if (!['audio', 'video'].includes(callType)) {
+//       return res.status(400).json({ error: 'Call type must be either "audio" or "video"' });
+//     }
+
+//     // Generate a unique channel name
+//     const channelName = `call_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+//     // const channelName = `call`;
+
+//     // Create call record in database
+//     const call = new Call({
+//       channelName,
+//       callType,
+//       initiator: callerId,
+//       participants: [callerId, ...participants], // Include caller in participants
+//       startTime: Date.now(),
+//       active: true
+//     });
+
+//     await call.save();
+
+//     // Send notifications to all participants except the caller
+//     const notificationPromises = participants.map(participantId => {
+//       if (participantId !== callerId) {
+//         console.log("notification sent.. " + participantId);
+//         return sendCallNotification(participantId, {
+//           channelName,
+//           callType,
+//           callerId
+//         });
+//       }
+//       return Promise.resolve(true);
+//     });
+
+//     // Wait for all notifications to be sent
+//     await Promise.all(notificationPromises);
+
+//     return res.json({
+//       success: true,
+//       channelName,
+//       callType,
+//       participants
+//     });
+//   } catch (error) {
+//     console.error('Error starting call:', error);
+//     return res.status(500).json({ error: 'Failed to start call' });
+//   }
+// });
+
+// // End a call
+// app.post('/api/end-call', async (req, res) => {
+//   try {
+//     const { channelName, userId } = req.body;
+
+//     if (!channelName) {
+//       return res.status(400).json({ error: 'Channel name is required' });
+//     }
+
+//     // Find and update the call
+//     const call = await Call.findOne({ channelName });
+
+//     if (!call) {
+//       return res.status(404).json({ error: 'Call not found' });
+//     }
+
+//     // Update call status
+//     call.active = false;
+//     await call.save();
+
+//     return res.json({ success: true });
+//   } catch (error) {
+//     console.error('Error ending call:', error);
+//     return res.status(500).json({ error: 'Failed to end call' });
+//   }
+// });
 
 // Agora configuration
 const APP_ID = process.env.AGORA_APP_ID;
@@ -622,7 +856,7 @@ app.get('/api/active-calls', async (req, res) => {
     // Find all active calls where the user is a participant
     const activeCalls = await Call.find({
       participants: userId,
-      active: true
+      active: true,
     });
 
     return res.json({ activeCalls });
@@ -711,7 +945,9 @@ app.post('/api/start-call', async (req, res) => {
       initiator: callerId,
       participants: [callerId, ...participants], // Include caller in participants
       startTime: Date.now(),
-      active: true
+      active: true,
+      status: 'initiated'
+      // endTime and duration will be set when the call ends
     });
 
     await call.save();
@@ -754,19 +990,318 @@ app.post('/api/end-call', async (req, res) => {
     }
 
     // Find and update the call
-    const call = await Call.findOne({ channelName });
+    const call = await Call.findOne({ channelName, active: true });
 
     if (!call) {
-      return res.status(404).json({ error: 'Call not found' });
+      return res.status(404).json({ error: 'Active call not found' });
     }
 
-    // Update call status
+    // Update call status and set end time and duration
+    const endTime = new Date();
+    const durationInSeconds = Math.round((endTime - call.startTime) / 1000);
+
     call.active = false;
+    call.endTime = endTime;
+    call.duration = durationInSeconds;
+    call.status = 'ended';
+
     await call.save();
 
-    return res.json({ success: true });
+    // Update user activity records
+    await updateUserActivityForCall(call);
+
+    return res.json({
+      success: true,
+      duration: durationInSeconds
+    });
   } catch (error) {
     console.error('Error ending call:', error);
     return res.status(500).json({ error: 'Failed to end call' });
+  }
+});
+
+// Helper function to update user activity records when a call ends
+async function updateUserActivityForCall(call) {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const durationField = call.callType === 'audio' ? 'audioDuration' : 'videoDuration';
+
+    // Update or create activity records for each participant
+    const updatePromises = call.participants.map(async (participantId) => {
+      // Find today's activity record for this user
+      const existingActivity = await UserActivity.findOne({
+        userId: participantId,
+        date: today
+      });
+
+      if (existingActivity) {
+        // Update existing record
+        existingActivity[durationField] = (existingActivity[durationField] || 0) + call.duration;
+        existingActivity.callCount += 1;
+        return existingActivity.save();
+      } else {
+        // Create new record
+        const newActivity = new UserActivity({
+          userId: participantId,
+          date: today,
+          [durationField]: call.duration,
+          callCount: 1
+        });
+        return newActivity.save();
+      }
+    });
+
+    await Promise.all(updatePromises);
+    return true;
+  } catch (error) {
+    console.error('Error updating user activity for call:', error);
+    return false;
+  }
+}
+
+// Get call statistics for a user
+app.get('/api/call-stats/:userId', async (req, res) => {
+  try {
+    console.log("call-stats called");
+    const { userId } = req.params;
+    const { days = 7 } = req.query;
+    console.log("userId: " + userId);
+
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (parseInt(days) - 1));
+    startDate.setHours(0, 0, 0, 0);
+
+    // Create array of dates for the past N days
+    const dateArray = [];
+    for (let i = 0; i < parseInt(days); i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      dateArray.push({
+        date: new Date(date),
+        formattedDate: date.toISOString().split('T')[0]
+      });
+    }
+
+    // Aggregate call statistics
+    const callStats = await Call.aggregate([
+      {
+        $match: {
+          participants: userId,
+          startTime: { $gte: startDate, $lte: endDate },
+          endTime: { $exists: true }
+        }
+      },
+      {
+        $project: {
+          dateString: { $dateToString: { format: "%Y-%m-%d", date: "$startTime" } },
+          callType: 1,
+          duration: 1
+        }
+      },
+      {
+        $group: {
+          _id: {
+            date: "$dateString",
+            type: "$callType"
+          },
+          totalDuration: { $sum: "$duration" },
+          callCount: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { "_id.date": 1 }
+      }
+    ]);
+    console.log("call-stats: " + callStats);
+
+    // Map results to include all days in the range
+    const result = dateArray.map(day => {
+      const audioCalls = callStats.find(
+        stat => stat._id.date === day.formattedDate && stat._id.type === 'audio'
+      );
+
+      const videoCalls = callStats.find(
+        stat => stat._id.date === day.formattedDate && stat._id.type === 'video'
+      );
+
+      return {
+        date: day.formattedDate,
+        audio: {
+          duration: audioCalls ? audioCalls.totalDuration : 0,
+          count: audioCalls ? audioCalls.callCount : 0
+        },
+        video: {
+          duration: videoCalls ? videoCalls.totalDuration : 0,
+          count: videoCalls ? videoCalls.callCount : 0
+        }
+      };
+    });
+
+    // Calculate totals
+    const totals = result.reduce((acc, day) => {
+      return {
+        audioDuration: acc.audioDuration + day.audio.duration,
+        audioCount: acc.audioCount + day.audio.count,
+        videoDuration: acc.videoDuration + day.video.duration,
+        videoCount: acc.videoCount + day.video.count
+      };
+    }, { audioDuration: 0, audioCount: 0, videoDuration: 0, videoCount: 0 });
+
+    res.json({
+      success: true,
+      dailyStats: result,
+      totals
+    });
+  } catch (error) {
+    console.error('Error fetching call stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch call statistics',
+      error: error.message
+    });
+  }
+});
+
+// Get message statistics for a user
+app.get('/api/message-stats/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { days = 7 } = req.query;
+
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (parseInt(days) - 1));
+    startDate.setHours(0, 0, 0, 0);
+
+    // Create array of dates
+    const dateArray = [];
+    for (let i = 0; i < parseInt(days); i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      dateArray.push({
+        date: new Date(date),
+        formattedDate: date.toISOString().split('T')[0] // Extracts 'YYYY-MM-DD'
+      });
+    }
+
+    // Get message counts from Message collection
+    const messageCounts = await Message.aggregate([
+      {
+        $match: {
+          sender: new mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: startDate, $lte: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+          },
+          // _id: "$createdAt",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    console.log("message counts: " + messageCounts[0]._id);
+    console.log("date: " + dateArray[0].date + "---- " + dateArray[0].formattedDate);
+
+
+    // Map results to include all days
+    const result = dateArray.map(day => {
+      const dayData = messageCounts.find(item => item._id === day.formattedDate);
+      console.log("in message-stats: " + dayData);
+      return {
+        date: day.formattedDate,
+        messageCount: dayData ? dayData.count : 0
+      };
+    });
+
+    // Calculate total
+    const totalMessages = result.reduce((sum, day) => sum + day.messageCount, 0);
+
+    res.json({
+      success: true,
+      dailyStats: result,
+      total: totalMessages
+    });
+  } catch (error) {
+    console.error('Error fetching message stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch message statistics',
+      error: error.message
+    });
+  }
+});
+
+// Get combined activity stats for a user
+app.get('/api/activity-stats/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { days = 7 } = req.query;
+
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (parseInt(days) - 1));
+    startDate.setHours(0, 0, 0, 0);
+
+    // Create array of dates
+    const dateArray = [];
+    for (let i = 0; i < parseInt(days); i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      dateArray.push({
+        date: new Date(date),
+        formattedDate: date.toISOString().split('T')[0]
+      });
+    }
+
+    // Get activity data from UserActivity collection
+    const activityData = await UserActivity.find({
+      userId: userId,
+      date: { $gte: startDate, $lte: endDate }
+    }).lean();
+
+    // Map results to include all days
+    const result = dateArray.map(day => {
+      const dayData = activityData.find(
+        activity => activity.date.toISOString().split('T')[0] === day.formattedDate
+      ) || { messagesSent: 0, audioDuration: 0, videoDuration: 0 };
+
+      return {
+        date: day.formattedDate,
+        messagesSent: dayData.messagesSent || 0,
+        audioDuration: dayData.audioDuration || 0,
+        videoDuration: dayData.videoDuration || 0
+      };
+    });
+
+    // Calculate totals
+    const totals = result.reduce((acc, day) => {
+      return {
+        messagesSent: acc.messagesSent + day.messagesSent,
+        audioDuration: acc.audioDuration + day.audioDuration,
+        videoDuration: acc.videoDuration + day.videoDuration
+      };
+    }, { messagesSent: 0, audioDuration: 0, videoDuration: 0 });
+
+    res.json({
+      success: true,
+      dailyStats: result,
+      totals
+    });
+  } catch (error) {
+    console.error('Error fetching activity stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch activity statistics',
+      error: error.message
+    });
   }
 });
