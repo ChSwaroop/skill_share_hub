@@ -178,19 +178,19 @@ class _CustomUsersViewState extends State<CustomUsersView> {
                                 : SizedBox(),
                             const Spacer(),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      fixedSize: Size((width - 150) / 2, 30),
-                                      backgroundColor: Colors.white),
-                                  onPressed: () {},
-                                  child: Text(
-                                    "Know more",
-                                    style: theme.textTheme.titleMedium!
-                                        .copyWith(color: ColorsUtil.primaryclr),
-                                  ),
-                                ),
+                                // ElevatedButton(
+                                //   style: ElevatedButton.styleFrom(
+                                //       fixedSize: Size((width - 150) / 2, 30),
+                                //       backgroundColor: Colors.white),
+                                //   onPressed: () {},
+                                //   child: Text(
+                                //     "Know more",
+                                //     style: theme.textTheme.titleMedium!
+                                //         .copyWith(color: ColorsUtil.primaryclr),
+                                //   ),
+                                // ),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     fixedSize: Size((width - 150) / 2, 30),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:skill_share_hub/colors.dart';
 import 'package:skill_share_hub/models/connection_model.dart';
 import 'package:skill_share_hub/providers/chat_provider.dart';
 import 'package:skill_share_hub/providers/user_provider.dart';
@@ -121,6 +122,7 @@ class _CreateGroupChatScreenState extends State<CreateGroupChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Create Group Chat'),
@@ -139,6 +141,9 @@ class _CreateGroupChatScreenState extends State<CreateGroupChatScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: TextField(
+                    style: theme.textTheme.bodyLarge!
+                        .copyWith(color: Colors.black),
+                    cursorColor: ColorsUtil.primaryclr,
                     controller: _groupNameController,
                     decoration: InputDecoration(
                       labelText: 'Group Name',
@@ -159,7 +164,7 @@ class _CreateGroupChatScreenState extends State<CreateGroupChatScreen> {
                         'Selected Contacts: ${_selectedContacts.length}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
+                          color: ColorsUtil.primaryclr,
                         ),
                       ),
                       Spacer(),
@@ -204,11 +209,15 @@ class _CreateGroupChatScreenState extends State<CreateGroupChatScreen> {
                           padding: const EdgeInsets.only(right: 8.0),
                           child: Chip(
                             avatar: CircleAvatar(
-                              backgroundImage: contact!.profilePicture != null
+                              backgroundImage: (contact!.profilePicture !=
+                                          null &&
+                                      contact.profilePicture!.isNotEmpty)
                                   ? NetworkImage(contact.profilePicture!)
-                                  : null,
-                              child: contact.profilePicture == null
-                                  ? Text(contact.username ?? '')
+                                  : NetworkImage(
+                                      "https://img.freepik.com/premium-vector/conceptual-illustration-person-crossing-finish-line-with-determination_1263357-35011.jpg?ga=GA1.1.1483351532.1733847503&semt=ais_hybrid"),
+                              child: (contact.profilePicture == null ||
+                                      contact.profilePicture!.isEmpty)
+                                  ? null // No need for text initials when using fallback image
                                   : null,
                             ),
                             label: Text(contact.username ?? ''),
@@ -245,21 +254,26 @@ class _CreateGroupChatScreenState extends State<CreateGroupChatScreen> {
                                 : connection.requesterId;
                             final contact = displayUser;
 
-                            final isSelected = _availableContacts
-                                .any((user) => user.id == contact!.id);
+                            final isSelected = _selectedContacts
+                                .any((user) => user.id == connection.id);
 
                             return ListTile(
                               leading: CircleAvatar(
-                                backgroundImage: contact!.profilePicture != null
+                                backgroundImage: (contact!.profilePicture !=
+                                            null &&
+                                        contact.profilePicture!.isNotEmpty)
                                     ? NetworkImage(contact.profilePicture!)
-                                    : null,
-                                child: contact.profilePicture == null
-                                    ? Text(contact.username ?? '')
+                                    : NetworkImage(
+                                        "https://img.freepik.com/premium-vector/conceptual-illustration-person-crossing-finish-line-with-determination_1263357-35011.jpg?ga=GA1.1.1483351532.1733847503&semt=ais_hybrid"),
+                                child: (contact.profilePicture == null ||
+                                        contact.profilePicture!.isEmpty)
+                                    ? null // No need for text initials when using fallback image
                                     : null,
                               ),
                               title: Text(contact.username ?? ''),
                               subtitle: Text(contact.username ?? ''),
                               trailing: Checkbox(
+                                activeColor: ColorsUtil.primaryclr,
                                 value: isSelected,
                                 onChanged: (_) {
                                   _toggleContactSelection(connection);

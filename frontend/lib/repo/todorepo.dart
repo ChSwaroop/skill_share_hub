@@ -44,6 +44,21 @@ class TodoRepository {
     }
   }
 
+  // Get todo count
+  Future<int?> getTodoCount() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/todos/count'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      return jsonResponse['count'];
+    } else {
+      throw Exception('Failed to load todo: ${response.body}');
+    }
+  }
+
   // Create a new todo
   Future<Datum> createTodo({
     required String title,

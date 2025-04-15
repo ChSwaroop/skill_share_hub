@@ -1,9 +1,18 @@
+import 'dart:math';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:skill_share_hub/colors.dart';
-import 'package:skill_share_hub/models/connection_model.dart';
+import 'package:skill_share_hub/constants.dart';
+import 'package:skill_share_hub/models/connection_model.dart' as connection;
+import 'package:skill_share_hub/models/recommendation%20models/personalized_recommendations_model.dart';
+import 'package:skill_share_hub/providers/todo_provider.dart';
 import 'package:skill_share_hub/providers/user_provider.dart';
+import 'package:skill_share_hub/repo/connection_repo.dart';
+import 'package:skill_share_hub/repo/recommendationsRepo.dart';
+import 'package:skill_share_hub/repo/todorepo.dart';
 import 'package:skill_share_hub/views/analysis_graphs/analysis.dart';
 import 'package:skill_share_hub/views/analysis_graphs/line_chart.dart';
 import 'package:skill_share_hub/views/analysis_graphs/message_chart_data_call.dart';
@@ -18,6 +27,8 @@ import 'package:skill_share_hub/views/home_views/explore.dart';
 import 'package:skill_share_hub/views/home_views/profile.dart';
 import 'package:skill_share_hub/views/home_views/todo.dart';
 import 'package:skill_share_hub/views/util/custom_card.dart';
+import 'package:skill_share_hub/views/util/shimmer_user.dart';
+import 'package:skill_share_hub/models/connection_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,12 +39,83 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int curCardIndex = 0;
+  bool isLoading = false;
+  int connectionsCount = 0;
+  int todoCount = 0;
+  late PersonalizedRecommendation personalizedRecommendations;
+  List<connection.Datum> _connections = [];
+
+  Future<void> _loadConnections() async {
+    // if (isLoading) return;
+    // setState(() {
+    //   _isLoadingConnections = true;
+    // });
+
+    try {
+      final Connection connectionData = await ConnectionRepo().getMyConnections(
+          'accepted',
+          1,
+          20,
+          Provider.of<UserProvider>(context, listen: false).token!);
+
+      if (connectionData.success == true && connectionData.data != null) {
+        // debugPrint("Connections: ${connectionData.data}");
+        setState(() {
+          _connections.addAll(connectionData.data!);
+        });
+      } else {
+        print('API Error: ${connectionData.toString()}');
+      }
+    } catch (e) {
+      print('Error loading connections: $e');
+    } finally {}
+  }
+
+  //method to fetch connections count
+
+  Future<void> fetchConnectionsCount() async {
+    String token = Provider.of<UserProvider>(context, listen: false).token!;
+    final response = await ConnectionRepo().getConnectionsCount(token);
+    setState(() {
+      connectionsCount = response ?? 0;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      isLoading = true;
+      setState(() {});
+
+      Provider.of<UserProvider>(context, listen: false).getConnectionsCount();
+      Provider.of<TodoProvider>(context, listen: false).fetchTodos();
+      final data = await RecommendationRepo().fetchPersonalizedRecommendations(
+          Provider.of<UserProvider>(context, listen: false).token!);
+
+      personalizedRecommendations = data!;
+      await _loadConnections();
+
+      setState(() {
+        // todoCount = todoCountResponse ?? 0;
+        isLoading = false;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
+
+    //Filter the todosCount for those who have completed field is true
+    int completedTodosCount = Provider.of<TodoProvider>(context)
+        .todos
+        .where((todo) => todo.completed == false)
+        .toList()
+        .length;
 
     return Scaffold(
       backgroundColor: ColorsUtil.bgclr,
@@ -50,22 +132,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Row(
                     children: [
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Profile(),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          height: 30,
-                          width: 30,
-                          child: Image.asset("assets/images/profile-pic1.png"),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
                       InkWell(
                         onTap: () {
                           Navigator.push(
@@ -106,7 +172,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                         child: Container(
-                          child: Image.asset("assets/images/notifications.png"),
+                          child: Icon(
+                            Icons.chat_bubble_outline,
+                            color: ColorsUtil.primaryclr,
+                          ),
                         ),
                       ),
                       SizedBox(width: 10),
@@ -130,6 +199,22 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: ColorsUtil.primaryclr,
                             size: 30,
                           ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Profile(),
+                            ),
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundImage: NetworkImage(
+                              'https://img.freepik.com/premium-vector/conceptual-illustration-person-crossing-finish-line-with-determination_1263357-35011.jpg?ga=GA1.1.1483351532.1733847503&semt=ais_hybrid'),
                         ),
                       ),
                     ],
@@ -290,7 +375,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   card_custom(
                     theme: theme,
                     heading: "Connections",
-                    txt: "3",
+                    txt: Provider.of<UserProvider>(context)
+                        .connectionsCount
+                        .toString(),
                   ),
                   const SizedBox(width: 15),
                   Container(
@@ -311,14 +398,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       children: [
                         Text(
-                          "Tasks Today",
-                          style: theme.textTheme.bodyMedium!
+                          "Pending Tasks",
+                          style: theme.textTheme.bodySmall!
                               .copyWith(color: ColorsUtil.textclr),
                         ),
                         Text(
-                          "03",
+                          completedTodosCount.toString() ?? '0',
                           style: theme.textTheme.headlineMedium!.copyWith(
-                              fontSize: 40, color: ColorsUtil.textclr),
+                              fontSize: 35, color: ColorsUtil.textclr),
                         )
                       ],
                     ),
@@ -338,7 +425,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) => TrailChart()));
                   },
-                  child: Text("View more")),
+                  child: Text(
+                    "View more",
+                    style: theme.textTheme.bodyLarge!.copyWith(
+                      color: ColorsUtil.primaryclr,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )),
               const SizedBox(height: 60),
               Row(
                 children: [
@@ -350,7 +443,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 15),
-              details_card(width, theme),
+              (isLoading)
+                  ? ShimmerUser()
+                  : details_card(width, theme, personalizedRecommendations),
             ],
           ),
         ),
@@ -358,7 +453,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Column details_card(double width, ThemeData theme) {
+  Column details_card(
+      double width, ThemeData theme, PersonalizedRecommendation rec) {
     return Column(
       children: [
         //   ],
@@ -368,7 +464,9 @@ class _HomeScreenState extends State<HomeScreen> {
           width: width,
           child: Center(
             child: CarouselSlider.builder(
-              itemCount: 3,
+              itemCount: min(
+                  ((rec != null && rec.data != null) ? rec.data!.length : 0),
+                  10),
               itemBuilder: (context, ind, j) {
                 return Container(
                   height: 250,
@@ -386,7 +484,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         spreadRadius: 1,
                         blurRadius: 6,
                         color: Colors.grey.shade300,
-                      )
+                      ),
+                      // BoxShadow(
+                      //   offset: Offset(4, 4),
+                      //   spreadRadius: 2,
+                      //   blurRadius: 10,
+                      //   color: Colors.black.withOpacity(0.1),
+                      // )
                     ],
                   ),
                   child: Column(
@@ -427,11 +531,35 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "Python Development",
-                            style: theme.textTheme.titleMedium,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                rec.data![ind].name ?? "No name",
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              Text(
+                                rec.data![ind].experts![0].firstName ??
+                                    "No name",
+                                style: theme.textTheme.titleMedium,
+                              )
+                            ],
                           ),
-                          Image.asset("assets/images/cardpic.png")
+                          (rec.data![ind].experts!.length > 0 &&
+                                  rec.data![ind].experts![0].profilePicture !=
+                                      null &&
+                                  rec.data![ind].experts![0].profilePicture!
+                                      .isNotEmpty)
+                              ? CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: NetworkImage(rec
+                                      .data![ind].experts![0].profilePicture!),
+                                )
+                              : const CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage:
+                                      AssetImage("assets/images/cardpic.png"),
+                                ),
                         ],
                       ),
                       const SizedBox(height: 15),
@@ -449,86 +577,106 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       const SizedBox(height: 7),
-                      Row(
-                        children: [
-                          Container(
-                            height: 5,
-                            width: 5,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFFBABABA),
-                            ),
-                          ),
-                          const SizedBox(width: 7),
-                          Text(
-                            "Web development",
-                            style: theme.textTheme.bodySmall!
-                                .copyWith(color: const Color(0xFFBABABA)),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            height: 5,
-                            width: 5,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFFBABABA),
-                            ),
-                          ),
-                          const SizedBox(width: 7),
-                          Text(
-                            "java Scripting",
-                            style: theme.textTheme.bodySmall!
-                                .copyWith(color: const Color(0xFFBABABA)),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            height: 5,
-                            width: 5,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFFBABABA),
-                            ),
-                          ),
-                          const SizedBox(width: 7),
-                          Text(
-                            "Green sock library",
-                            style: theme.textTheme.bodySmall!
-                                .copyWith(color: const Color(0xFFBABABA)),
-                          ),
-                        ],
-                      ),
+                      (rec.data![ind].experts![0].skills != null &&
+                              rec.data![ind].experts![0].skills!.isNotEmpty)
+                          ? Column(
+                              children: [
+                                for (var i = 0;
+                                    i <
+                                        min(
+                                            rec.data![ind].experts![0].skills!
+                                                .length,
+                                            3);
+                                    i++)
+                                  Row(
+                                    children: [
+                                      Container(
+                                        height: 5,
+                                        width: 5,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(0xFFBABABA),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 7),
+                                      Text(
+                                        rec.data![ind].experts![0].skills![i]
+                                                .name ??
+                                            "No name",
+                                        style: theme.textTheme.bodySmall!
+                                            .copyWith(
+                                                color: const Color(0xFFBABABA)),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            )
+                          : SizedBox(),
                       const Spacer(),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                fixedSize: Size((width - 150) / 2, 30),
-                                backgroundColor: Colors.white),
-                            onPressed: () {},
-                            child: Text(
-                              "Know more",
-                              style: theme.textTheme.titleMedium!
-                                  .copyWith(color: ColorsUtil.primaryclr),
-                            ),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              fixedSize: Size((width - 150) / 2, 30),
-                            ),
-                            onPressed: () {},
-                            child: Text(
-                              "Message",
-                              style: theme.textTheme.titleMedium!
-                                  .copyWith(color: Colors.white),
-                            ),
-                          )
+                          // ElevatedButton(
+                          //   style: ElevatedButton.styleFrom(
+                          //     fixedSize: Size((width - 150) / 2, 30),
+                          //     backgroundColor: Colors.white,
+                          //   ),
+                          //   onPressed: () {},
+                          //   child: Text(
+                          //     "Know more",
+                          //     style: theme.textTheme.titleMedium!
+                          //         .copyWith(color: ColorsUtil.primaryclr),
+                          //   ),
+                          // ),
+
+                          //check whether the user is already a connection
+                          // if yes, show "Message" button
+                          // if no, show "Connect" button
+                          _connections.any((connection) =>
+                                  connection.requesterId!.id ==
+                                      rec.data![ind].experts![0].id ||
+                                  connection.recipientId!.id ==
+                                      rec.data![ind].experts![0].id)
+                              ? ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    fixedSize: Size((width - 150) / 2, 30),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ChatListScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    "Message",
+                                    style: theme.textTheme.titleMedium!
+                                        .copyWith(color: Colors.white),
+                                  ),
+                                )
+                              : //if not, show "Connect" button
+
+                              ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    fixedSize: Size((width - 150) / 2, 30),
+                                  ),
+                                  onPressed: () async {
+                                    final response =
+                                        await ConnectionRepo().createConnection(
+                                      rec.data![ind].experts![0].id!,
+                                      "",
+                                      Provider.of<UserProvider>(context,
+                                              listen: false)
+                                          .token!,
+                                    );
+                                  },
+                                  child: Text(
+                                    "Connect",
+                                    style: theme.textTheme.titleMedium!
+                                        .copyWith(color: Colors.white),
+                                  ),
+                                )
                         ],
                       )
                     ],
@@ -555,7 +703,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Center(
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: 4,
+              itemCount: min(
+                  ((rec != null && rec.data != null) ? rec.data!.length : 0),
+                  10),
               shrinkWrap: true,
               itemBuilder: (context, ind) {
                 return Container(

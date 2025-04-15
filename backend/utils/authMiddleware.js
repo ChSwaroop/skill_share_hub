@@ -14,6 +14,7 @@ const authMiddleware = async (req, res, next) => {
         // Verify token and decode the payload
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded; // Add the decoded user data to the request object for use in the route
+        console.log("url: " + req.url);
         console.log("user: ", decoded);
         // Check if the user still exists in the database
         const user = await User.findById(decoded.userId); // Ensure 'userId' matches the payload key

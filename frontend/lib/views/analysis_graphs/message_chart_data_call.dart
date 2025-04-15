@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
+import 'package:skill_share_hub/colors.dart';
 import 'package:skill_share_hub/models/call_stats_model.dart' as callModel;
 import 'package:skill_share_hub/models/call_stats_model.dart';
 import 'package:skill_share_hub/models/messageStatsModel.dart' as messageModel;
@@ -118,22 +119,26 @@ class _TrailChartState extends State<TrailChart> {
     return Scaffold(
         appBar: AppBar(title: const Text('Message Statistics')),
         body: (isLoading)
-            ? CircularProgressIndicator()
+            ? Center(
+                child: CircularProgressIndicator(
+                color: ColorsUtil.primaryclr,
+              ))
             : SingleChildScrollView(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(
                         height: height / 2,
                         child: MessageStatsChart(messageStats: messageStats)),
                     SizedBox(height: 50),
-                    SizedBox(
-                      height: height / 2,
-                      child: CallStatsChart(
-                        callStats: callStats,
-                        showAudioStats:
-                            true, // Set to false to show video stats
-                      ),
-                    ),
+                    // SizedBox(
+                    //   height: height / 2,
+                    //   child: CallStatsChart(
+                    //     callStats: callStats,
+                    //     showAudioStats:
+                    //         true, // Set to false to show video stats
+                    //   ),
+                    // ),
                   ],
                 ),
               ));

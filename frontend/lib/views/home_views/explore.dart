@@ -97,7 +97,15 @@ class _ExploreState extends State<Explore> {
                     icon: const Icon(Icons.arrow_back_ios),
                   ),
                   Image.asset("assets/images/icon.png"),
-                  Image.asset("assets/images/profile-pic1.png"),
+                  Container(
+                    height: 30,
+                    width: 30,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                    ),
+                    child: Image.network(
+                        "https://img.freepik.com/premium-vector/conceptual-illustration-person-crossing-finish-line-with-determination_1263357-35011.jpg?ga=GA1.1.1483351532.1733847503&semt=ais_hybrid"),
+                  ),
                 ],
               ),
               const SizedBox(height: 25),
@@ -134,14 +142,14 @@ class _ExploreState extends State<Explore> {
                   ? ShimmerUser()
                   : CustomUsersView(users: searchResults),
               const SizedBox(height: 44),
-              Text(
-                "Recommended for you",
-                style: theme.textTheme.bodyMedium!.copyWith(
-                  color: const Color(0xFF3D3D3D),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
+              // Text(
+              //   "Recommended for you",
+              //   style: theme.textTheme.bodyMedium!.copyWith(
+              //     color: const Color(0xFF3D3D3D),
+              //     fontWeight: FontWeight.bold,
+              //   ),
+              // ),
+              // const SizedBox(height: 16),
               // details_card(width, theme, searchResults),
             ],
           ),

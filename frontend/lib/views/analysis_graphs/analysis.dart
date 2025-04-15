@@ -93,8 +93,10 @@ class _UserStatsState extends State<UserStats> {
               Text("Market Prices"),
               Spacer(),
               (isLoading)
-                  ? CircularProgressIndicator(
-                      color: ColorsUtil.primaryclr,
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: ColorsUtil.primaryclr,
+                      ),
                     )
                   : SizedBox(
                       height: height / 2,

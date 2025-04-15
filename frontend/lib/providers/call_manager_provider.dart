@@ -100,7 +100,7 @@ class CallManagerProvider extends ChangeNotifier {
           }
         },
         onUserOffline: (connection, uid, reason) {
-          // _remoteUsers.remove(uid);
+          _remoteUsers.remove(uid);
           // For 1-to-1 calls, if the remote user leaves, end the call
           if (_remoteUsers.isEmpty && _channelName != null) {
             // Call leaveCall without backend notification since we're just responding

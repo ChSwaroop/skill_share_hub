@@ -25,6 +25,25 @@ class ConnectionRepo {
     }
   }
 
+  Future<int?> getConnectionsCount(String token) async {
+    final response = await http.get(
+      Uri.parse('${baseUrl}/api/connections/count'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final res = json.decode(response.body);
+      // debugPrint("res: " + res);
+      return res['count'];
+    } else {
+      debugPrint("error:" + response.body);
+      throw Exception('Failed to get connections count');
+    }
+  }
+
   Future<dynamic> updateConnectionStatus(
       String connectionId, String status, String token) async {
     final response = await http.put(

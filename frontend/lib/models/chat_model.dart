@@ -59,7 +59,7 @@ class Chat {
 
   String getChatImage(String currentUserId) {
     if (chatType == 'group') {
-      return 'assets/images/group.png'; // Default group image
+      return 'https://img.freepik.com/premium-vector/radial-family-hub-central-connection-design_1069666-4776.jpg?ga=GA1.1.1483351532.1733847503&semt=ais_hybrid&w=740'; // Default group image
     } else {
       // For direct chats, return the other participant's profile picture
       final otherParticipant = participants.firstWhere(

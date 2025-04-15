@@ -73,6 +73,15 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
   void _handleCallStatusChange() {
     final callManager =
         Provider.of<CallManagerProvider>(context, listen: false);
+
+    // Start stopwatch when a connection is established
+    if (callManager.status == CallStatus.connected &&
+        callManager.remoteUsers.isNotEmpty &&
+        !_stopwatch.isRunning) {
+      _stopwatch.start();
+    }
+
+    // Handle call end
     if (callManager.status == CallStatus.idle && mounted) {
       Navigator.of(context).pop();
     }
@@ -100,7 +109,7 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
 
       if (mounted) {
         setState(() => _isLoading = false);
-        _stopwatch.start();
+        // _stopwatch.start();
       }
     } catch (e) {
       if (mounted) {
@@ -109,6 +118,19 @@ class _AudioCallScreenState extends State<AudioCallScreen> {
           _errorMessage = e.toString();
         });
       }
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final callManager = Provider.of<CallManagerProvider>(context);
+
+    // Start stopwatch when remote user joins and call is connected
+    if (callManager.status == CallStatus.connected &&
+        callManager.remoteUsers.isNotEmpty &&
+        !_stopwatch.isRunning) {
+      _stopwatch.start();
     }
   }
 

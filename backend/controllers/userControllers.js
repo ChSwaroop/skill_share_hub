@@ -2,12 +2,12 @@ const SkillProgress = require('../models/skillProgress');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const { User, Chat, Todo, Feedback, ChatbotHistory, Analytics, Skill } = require('../models/user.js');
+const { User, Chat, Todo, ChatbotHistory, Analytics, Skill } = require('../models/user.js');
 
 // Get User Profile
 exports.getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password');
+    const user = await User.findById(req.user.userId).select('-password').populate('skills').populate('communities').populate('messages').populate('feedbacks');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     res.json(user);

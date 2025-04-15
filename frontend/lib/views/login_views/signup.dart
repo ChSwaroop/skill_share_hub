@@ -62,11 +62,25 @@ class _SignUpState extends State<SignUp> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(type == 0 ? "Add Skill" : "Add Certification"),
-        content: TextField(controller: controller),
+        content: TextField(
+          controller: controller,
+          style: Theme.of(context)
+              .textTheme
+              .bodyLarge!
+              .copyWith(color: Colors.black),
+          cursorColor: ColorsUtil.primaryclr,
+          decoration: InputDecoration(
+            label: Text(type == 0 ? "Skill" : "Certification"),
+            errorMaxLines: 1,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: const Text(
+              "Cancel",
+              style: TextStyle(color: ColorsUtil.textclr),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -79,7 +93,10 @@ class _SignUpState extends State<SignUp> {
               });
               Navigator.pop(context);
             },
-            child: const Text("Add"),
+            child: const Text(
+              "Add",
+              style: TextStyle(color: ColorsUtil.primaryclr),
+            ),
           ),
         ],
       ),
@@ -322,16 +339,16 @@ class _SignUpState extends State<SignUp> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
-        TextFormField(
-          controller: _portfolioController,
-          style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
-          cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(labelText: "Portfolio website"),
-          // validator: (value) => value == null || value.isEmpty
-          //     ? 'Portfolio website is required'
-          //     : null,
-        ),
+        // const SizedBox(height: 20),
+        // TextFormField(
+        //   controller: _portfolioController,
+        //   style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+        //   cursorColor: ColorsUtil.primaryclr,
+        //   decoration: const InputDecoration(labelText: "Portfolio website"),
+        //   // validator: (value) => value == null || value.isEmpty
+        //   //     ? 'Portfolio website is required'
+        //   //     : null,
+        // ),
         const SizedBox(height: 35),
         ElevatedButton(
           onPressed: isLoading
@@ -351,8 +368,9 @@ class _SignUpState extends State<SignUp> {
                                 int.parse(monthController.text.trim()),
                                 int.parse(dayController.text.trim()))
                             .toIso8601String(), // Converts to a proper ISO 8601 format
-                        gender:
-                            "Male", // Adjust based on actual gender selection
+                        gender: isMale
+                            ? "Male"
+                            : "Female", // Adjust based on actual gender selection
                         email: emailController.text.trim(),
                         phoneNumber: phoneController.text.trim(),
                         occupation: _occupationController.text.trim(),
@@ -430,23 +448,23 @@ class _SignUpState extends State<SignUp> {
   Column Details_three(double width, ThemeData theme) {
     return Column(
       children: [
-        TextFormField(
-          controller: _occupationController,
-          style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
-          cursorColor: ColorsUtil.primaryclr,
-          decoration: const InputDecoration(labelText: "Occupation"),
-          validator: (value) =>
-              value == null || value.isEmpty ? 'Occupation is required' : null,
-        ),
-        const SizedBox(height: 20),
+        // TextFormField(
+        //   controller: _occupationController,
+        //   style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
+        //   cursorColor: ColorsUtil.primaryclr,
+        //   decoration: const InputDecoration(labelText: "Occupation"),
+        //   validator: (value) =>
+        //       value == null || value.isEmpty ? 'Occupation is required' : null,
+        // ),
+        // const SizedBox(height: 20),
         TextFormField(
           controller: _companyController,
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
           decoration: const InputDecoration(labelText: "Company"),
-          validator: (value) => value == null || value.isEmpty
-              ? 'Company name is required'
-              : null,
+          // validator: (value) => value == null || value.isEmpty
+          //     ? 'Company name is required'
+          //     : null,
         ),
         const SizedBox(height: 20),
         TextFormField(
@@ -669,7 +687,8 @@ class _SignUpState extends State<SignUp> {
     // final yearController = TextEditingController();
 
     // Gender selection state
-    bool isMale = true;
+
+    // bool isMale = true;
 
     // Validators
     String? validateName(String? value) {
@@ -743,7 +762,7 @@ class _SignUpState extends State<SignUp> {
         const SizedBox(height: 30),
         TextFormField(
           controller: userNameController,
-          // validator: validateName,
+          validator: validateName,
           style: theme.textTheme.bodyLarge!.copyWith(color: Colors.black),
           cursorColor: ColorsUtil.primaryclr,
           decoration: const InputDecoration(
@@ -904,6 +923,7 @@ class _SignUpState extends State<SignUp> {
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               // Form is valid, proceed with data
+              debugPrint("male: " + isMale.toString());
               final userData = {
                 'firstName': firstNameController.text,
                 'lastName': lastNameController.text,

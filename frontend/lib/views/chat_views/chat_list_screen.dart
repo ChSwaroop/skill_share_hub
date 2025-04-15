@@ -24,11 +24,12 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
   bool isFetchingChats = false;
+  int i = 0;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Initialize socket and fetch chats
       setState(() {
         isFetchingChats = true;
@@ -37,11 +38,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
       final chatProvider = Provider.of<ChatProvider>(context, listen: false);
 
       if (authProvider.token != null && authProvider.user != null) {
+        debugPrint("Establishing socket connection.........................." +
+            (i++).toString());
         chatProvider.initSocket(authProvider.user!.id!);
+        debugPrint(
+            "----------------------------------------------------------------------------");
 
-        debugPrint("isFetchingChats: $isFetchingChats");
+        // debugPrint("isFetchingChats: $isFetchingChats");
         chatProvider.fetchChats();
-        debugPrint("isFetchingChats: $isFetchingChats");
+        // debugPrint("isFetchingChats: $isFetchingChats");
       }
 
       setState(() {
@@ -152,7 +157,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           if (response.statusCode == 200 ||
                               response.statusCode == 201) {
                             final body = json.decode(response.body);
-                            final newChat = Chat.fromJson(body.data);
+
+                            debugPrint("success: " + body['data'].toString());
+                            final newChat = Chat.fromJson(body['data']);
                             Navigator.pop(ctx);
                             Navigator.push(
                               context,
@@ -203,23 +210,36 @@ class _ChatListScreenState extends State<ChatListScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.arrow_back_ios),
+          ),
           title: const Text('Chats'),
           actions: [
+            // IconButton(
+            //   icon: const Icon(
+            //     Icons.people,
+            //     color: ColorsUtil.primaryclr,
+            //   ),
+            //   onPressed: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //         builder: (context) => ConnectionsPage(
+            //           authToken: authProvider.token!,
+            //         ),
+            //       ),
+            //     );
+            //   },
+            // ),
             IconButton(
-              icon: const Icon(Icons.people),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ConnectionsPage(
-                      authToken: authProvider.token!,
-                    ),
-                  ),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.group_add),
+              icon: const Icon(
+                Icons.group_add,
+                color: ColorsUtil.primaryclr,
+              ),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -229,6 +249,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 );
               },
             ),
+            SizedBox(width: 10),
           ],
         ),
         body: (isFetchingChats)
@@ -270,89 +291,114 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           isOnline = otherUser.isOnline!;
                         }
 
-                        return ListTile(
-                          leading: Stack(
-                            children: [
-                              CircleAvatar(
-                                radius: 30,
-                                backgroundImage: NetworkImage(
-                                  chat.getChatImage(authProvider.user!.id!),
-                                ),
-                              ),
-                              if (isOnline)
-                                Positioned(
-                                  right: 0,
-                                  bottom: 0,
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: Colors.green,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Theme.of(context)
-                                            .scaffoldBackgroundColor,
-                                        width: 2,
-                                      ),
+                        return Column(
+                          children: [
+                            ListTile(
+                              // dense: true,
+                              leading: Stack(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundImage: NetworkImage(
+                                      chat.getChatImage(authProvider.user!.id!),
                                     ),
                                   ),
-                                ),
-                            ],
-                          ),
-                          title: Text(
-                            chatName,
-                            style: theme.textTheme.headlineSmall!.copyWith(
-                              color: ColorsUtil.primaryclr,
-                            ),
-                          ),
-                          subtitle: lastMessage != null
-                              ? Text(
-                                  lastMessage.sender.id == authProvider.user!.id
-                                      ? 'You: ${lastMessage.content}'
-                                      : lastMessage.content,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                )
-                              : Text(
-                                  chat.chatType == 'direct'
-                                      ? 'Start chatting'
-                                      : 'New group',
-                                  style: TextStyle(fontStyle: FontStyle.italic),
-                                ),
-                          trailing: lastMessage != null
-                              ? Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      timeago.format(lastMessage.createdAt,
-                                          locale: 'en_short'),
-                                      style: TextStyle(fontSize: 12),
+                                  if (isOnline)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: Colors.green,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Theme.of(context)
+                                                .scaffoldBackgroundColor,
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    if (lastMessage.sender.id !=
-                                        authProvider.user!.id)
-                                      _buildStatusIndicator(lastMessage.status)
-                                  ],
-                                )
-                              : null,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChatScreen(chat: chat),
+                                ],
                               ),
-                            );
-                          },
+                              title: Text(
+                                chatName,
+                                style: theme.textTheme.headlineSmall!.copyWith(
+                                  // color: ColorsUtil.primaryclr,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: lastMessage != null
+                                  ? Text(
+                                      lastMessage.sender.id ==
+                                              authProvider.user!.id
+                                          ? 'You: ${lastMessage.content}'
+                                          : lastMessage.content,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    )
+                                  : Text(
+                                      chat.chatType == 'direct'
+                                          ? 'Start chatting'
+                                          : 'New group',
+                                      style: TextStyle(
+                                          fontStyle: FontStyle.italic),
+                                    ),
+                              trailing: lastMessage != null
+                                  ? Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          timeago.format(lastMessage.createdAt,
+                                              locale: 'en_short'),
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        if (lastMessage.sender.id !=
+                                            authProvider.user!.id)
+                                          _buildStatusIndicator(
+                                              lastMessage.status)
+                                      ],
+                                    )
+                                  : null,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ChatScreen(chat: chat),
+                                  ),
+                                );
+                              },
+                            ),
+                            // SizedBox(height: 10),
+                            (index != (chatProvider.chats.length - 1))
+                                ? Divider(
+                                    indent: 20,
+                                    endIndent: 20,
+                                    thickness: 0.6,
+                                    color: Colors.grey.shade300,
+                                  )
+                                : SizedBox(),
+                          ],
                         );
                       },
                     ),
                   )),
         floatingActionButton: FloatingActionButton(
+          backgroundColor: ColorsUtil.primaryclr,
           onPressed: () {
             _showConnectionsDialog(context);
           },
-          child: const Icon(Icons.chat),
+          child: const Icon(
+            Icons.chat,
+            color: Colors.white,
+          ),
           tooltip: 'New Chat',
         ),
       ),

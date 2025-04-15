@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const dotenv = require('dotenv');
 
 // Import the models (including the Skill model, which is exported as Skill)
-const { User, Chat, Todo, Feedback, ChatbotHistory, Analytics, Skill } = require('../models/user.js');
+const { User, Chat, Todo, ChatbotHistory, Analytics, Skill } = require('../models/user.js');
 
 exports.registerUser = async (req, res) => {
     try {
@@ -108,12 +108,19 @@ exports.registerUser = async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRES_IN || '30d' }
         );
 
+        // Convert the user object to a plain object so we can modify it
+        const userObject = validUser.toObject();
+
+        // Transform the skills array to only contain skill names
+        userObject.skills = userObject.skills.map(skill => skill.name);
+
+
         // Send success response
         console.log(validUser.email);
         return res.status(201).json({
             message: "Registration successful",
             token,
-            user: validUser,
+            user: userObject,
         });
     } catch (error) {
         console.error("Error registering user:", error);
@@ -183,7 +190,7 @@ exports.loginUser = async (req, res) => {
                 { username: username }, // Check for username
                 { email: email },       // Check for email
             ],
-        });
+        }).populate('skills'); // Populate skills if needed
 
         // If user not found, return error
         if (!validUser) {
@@ -205,12 +212,19 @@ exports.loginUser = async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRES_IN || '30d' }
         );
 
+        // Convert the user object to a plain object so we can modify it
+        const userObject = validUser.toObject();
+
+        // Transform the skills array to only contain skill names
+        userObject.skills = userObject.skills.map(skill => skill.name);
+
+
         // Send success response
         console.log(validUser.email);
         return res.status(200).json({
             message: "Login successful",
             token,
-            user: validUser,
+            user: userObject,
         });
     } catch (error) {
         console.error("Error during login:", error);

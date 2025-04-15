@@ -209,11 +209,11 @@ const TodoSchema = new mongoose.Schema({
 
 
 // Feedback Schema
-const FeedbackSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  feedbackText: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
-});
+// const FeedbackSchema = new mongoose.Schema({
+//   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+//   feedbackText: { type: String, required: true },
+//   createdAt: { type: Date, default: Date.now }
+// });
 
 // Chatbot History Schema
 const ChatbotHistorySchema = new mongoose.Schema({
@@ -244,7 +244,7 @@ module.exports = {
   User: mongoose.model('User', UserSchema),
   Chat: mongoose.model('Chat', ChatSchema),
   Todo: mongoose.model('Todo', TodoSchema),
-  Feedback: mongoose.model('Feedback', FeedbackSchema),
+  // Feedback: mongoose.model('Feedback', FeedbackSchema),
   ChatbotHistory: mongoose.model('ChatbotHistory', ChatbotHistorySchema),
   Analytics: mongoose.model('Analytics', AnalyticsSchema),
   Skill: mongoose.model('Skill', SkillSchema),

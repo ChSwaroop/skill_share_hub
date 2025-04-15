@@ -147,6 +147,7 @@ class _ConnectionsPageState extends State<ConnectionsPage>
         connectionId,
         widget.authToken,
       );
+      Provider.of<UserProvider>(context, listen: false).getConnectionsCount();
 
       // After successful deletion, remove the item from _connections
       setState(() {
@@ -189,6 +190,7 @@ class _ConnectionsPageState extends State<ConnectionsPage>
         });
         _loadConnections();
         _loadPendingConnections();
+        Provider.of<UserProvider>(context).getConnectionsCount();
 
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(

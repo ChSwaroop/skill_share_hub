@@ -7,7 +7,8 @@ const {
     createTodo,
     updateTodo,
     deleteTodo,
-    completeTodo
+    completeTodo,
+    getTodoCount
 } = require('../controllers/todoController');
 const { authMiddleware } = require('../utils/authMiddleware');
 
@@ -18,6 +19,10 @@ router
     .route('/')
     .get(getTodos)
     .post(createTodo);
+
+router
+    .route('/count')
+    .get(getTodoCount)
 
 router
     .route('/:id')

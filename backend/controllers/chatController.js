@@ -65,7 +65,21 @@ exports.createChat = async (req, res) => {
             const existingChat = await Chat.findOne({
                 chatType: 'direct',
                 participants: { $all: participants },
-            });
+            })
+                .populate({
+                    path: 'participants',
+                    select: 'username profilePicture isOnline lastSeen',
+                })
+                .populate({
+                    path: 'lastMessage',
+                    populate: {
+                        path: 'sender',
+                    },
+                })
+                .populate({
+                    path: 'lastMessage.readBy',
+                    select: 'user readAt',
+                });
 
             if (existingChat) {
                 return res.status(200).json({ message: 'Direct chat already exists', data: existingChat });
@@ -78,7 +92,25 @@ exports.createChat = async (req, res) => {
             });
 
             const savedChat = await newChat.save();
-            return res.status(201).json({ message: 'Direct chat created successfully', data: savedChat });
+
+            // Populate the saved chat with the same fields as getChatsByUserId
+            const populatedChat = await Chat.findById(savedChat._id)
+                .populate({
+                    path: 'participants',
+                    select: 'username profilePicture isOnline lastSeen',
+                })
+                .populate({
+                    path: 'lastMessage',
+                    populate: {
+                        path: 'sender',
+                    },
+                })
+                .populate({
+                    path: 'lastMessage.readBy',
+                    select: 'user readAt',
+                });
+
+            return res.status(201).json({ message: 'Direct chat created successfully', data: populatedChat });
         } else if (chatType === 'group') {
             if (!name) {
                 return res.status(400).json({ message: 'Group name is required' });
@@ -96,8 +128,27 @@ exports.createChat = async (req, res) => {
                 admins: admins && Array.isArray(admins) ? admins.filter(id => mongoose.Types.ObjectId.isValid(id)) : null,
             });
 
+
             const savedChat = await newChat.save();
-            return res.status(201).json({ message: 'Group chat created successfully', data: savedChat });
+
+            // Populate the saved group chat with the same fields
+            const populatedChat = await Chat.findById(savedChat._id)
+                .populate({
+                    path: 'participants',
+                    select: 'username profilePicture isOnline lastSeen',
+                })
+                .populate({
+                    path: 'lastMessage',
+                    populate: {
+                        path: 'sender',
+                    },
+                })
+                .populate({
+                    path: 'lastMessage.readBy',
+                    select: 'user readAt',
+                });
+
+            return res.status(201).json({ message: 'Group chat created successfully', data: populatedChat });
         }
     } catch (error) {
         console.error('Error creating chat:', error);

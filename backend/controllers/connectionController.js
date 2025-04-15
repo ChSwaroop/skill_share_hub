@@ -39,6 +39,27 @@ exports.getMyConnections = async (req, res) => {
     }
 };
 
+// Get the count of connections for a user
+exports.getConnectionCount = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        console.log("userId: " + userId);
+
+        const count = await Connection.countDocuments({
+            $or: [
+                { requesterId: userId },
+                { recipientId: userId }
+            ]
+        });
+
+        res.status(200).json({ success: true, count });
+    } catch (error) {
+        console.log("Error in connections count: " + error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+
 // Get a single connection by ID
 exports.getConnection = async (req, res) => {
     try {

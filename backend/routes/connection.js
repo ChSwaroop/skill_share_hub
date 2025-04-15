@@ -6,6 +6,9 @@ const { authMiddleware } = require('../utils/authMiddleware');
 // Get all connections for the logged-in user
 router.get('/', authMiddleware, connectionController.getMyConnections);
 
+//get connection count
+router.get('/count', authMiddleware, connectionController.getConnectionCount);
+
 // Get a single connection by ID
 router.get('/:connectionId', authMiddleware, connectionController.getConnection);
 

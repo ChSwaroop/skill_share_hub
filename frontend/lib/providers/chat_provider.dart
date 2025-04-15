@@ -31,6 +31,10 @@ class ChatProvider with ChangeNotifier {
   // Initialize socket connection
   void initSocket(String userId) {
     // Only initialize if not already connected with the same user
+    debugPrint(_isConnected.toString());
+    debugPrint(_userId.toString());
+    debugPrint(userId.toString());
+    debugPrint(_socket.toString());
     if (_isConnected && _userId == userId && _socket != null) {
       print('Socket already connected for user: $userId');
       return;
@@ -241,7 +245,16 @@ class ChatProvider with ChangeNotifier {
 
   // Disconnect socket
   void disconnect() {
+    debugPrint("Called to disconnect socket");
     if (_socket != null && _socket!.connected) {
+      // Remove all event listeners first
+      _socket!.off('connect');
+      _socket!.off('disconnect');
+      _socket!.off('error');
+      _socket!.off('new_message');
+      _socket!.off('message_status_updated');
+      _socket!.off('user_status_changed');
+
       debugPrint("already socket exists disconnecting.........");
       debugPrint(_socket.hashCode.toString());
       _socket!.disconnect();

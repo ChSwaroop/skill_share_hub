@@ -18,8 +18,10 @@ const UserActivity = require('./models/userActivity');
 const startNotificationScheduler = require('./utils/notificationScheduler');
 const { RtcTokenBuilder, RtcRole } = require('agora-access-token');
 const chatRoutes = require('./routes/chatRoutes');
-const userStatsRoutes = require('./routes/userStatsRoutes'); // New route file
+const userStatsRoutes = require('./routes/userStatsRoutes');
+const skillRecommendationRoutes = require('./routes/recommendationRoutes');
 
+const feedbackRoutes = require('./routes/feedbackRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -35,6 +37,8 @@ app.use('/api/connections', connectionRoutes);
 app.use('/api/chats', chatRoutes);// Mount routers
 app.use('/api/todos', require('./routes/todoRoutes'));
 app.use('/api/stats', userStatsRoutes); // New stats routes
+app.use('/api/recommendations', skillRecommendationRoutes);
+app.use('/api/feedback', feedbackRoutes);
 // Add your other routes here (users, auth, etc.)
 
 // Start notification scheduler
@@ -78,7 +82,7 @@ io.on('connection', (socket) => {
   // User authentication and online status
   socket.on('authenticate', async (userId) => {
 
-    console.log("connected users while auth: " + JSON.stringify(Object.fromEntries(connectedUsers)));
+    // console.log("connected users while auth: " + JSON.stringify(Object.fromEntries(connectedUsers)));
     try {
       const user = await User.findById(userId);
       if (!user) return;
@@ -86,21 +90,38 @@ io.on('connection', (socket) => {
       // Update user status to online
       await User.findByIdAndUpdate(userId, { isOnline: true, lastSeen: new Date() });
 
-      // // If user already has a connection, remove old socket
-      // for (const [existingSocketId, existingUserId] of connectedUsers.entries()) {
-      //   if (existingUserId.toString() === userId.toString()) {
-      //     console.log(`Disconnecting previous session for user: ${userId}`);
-      //     io.sockets.sockets.get(existingSocketId)?.disconnect(true);
-      //     connectedUsers.delete(existingSocketId);
-      //   }
-      // }
+      console.log('connected users: ');
+      // If user already has a connection, remove old socket
+      for (const [existingSocketId, existingUserId] of connectedUsers.entries()) {
+        console.log(`Existing socket: ${existingSocketId}, User ID: ${existingUserId}`);
+        if (existingUserId.toString() === userId.toString()) {
+          console.log(`Disconnecting previous session for user: ${userId}`);
+          // io.sockets.sockets.get(existingSocketId)?.disconnect(true);
+          // connectedUsers.delete(existingSocketId);
+          const socketToDisconnect = io.sockets.sockets.get(existingSocketId);
+          if (socketToDisconnect) {
+            socketToDisconnect.disconnect(true);
+          }
+          return;
+        }
+      }
+      console.log("Entered bro...");
+      // const userIdStr = userId.toString(); // Use string representation for consistency
+
+      // Prevent duplicate processing for the same user concurrently
+      if (connectedUsers.has(userId)) {
+        console.log(`Authentication already in progress for user ${userIdStr}. Ignoring duplicate request from socket ${socket.id}.`);
+        return;
+      }
 
       // Add user to connected users map
       connectedUsers.set(socket.id, userId);
 
       // Join all user's chat rooms
       const chats = await Chat.find({ participants: userId });
+      // console.log("chats: " + chats);
       chats.forEach(chat => {
+
         socket.join(chat._id.toString());
       });
 
@@ -118,7 +139,7 @@ io.on('connection', (socket) => {
         }
       });
 
-      console.log(`User ${userId} authenticated and set to online`);
+      console.log(`User ${userId} authenticated and set to online ${socket.id}`);
     } catch (error) {
       console.error('Authentication error:', error);
     }

@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart';
 import 'dart:convert';
 
 import 'package:skill_share_hub/models/login_model.dart';
+import 'package:skill_share_hub/repo/connection_repo.dart';
 
 class UserProvider extends ChangeNotifier {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   String? _token;
   User? _user;
   List<User> _connectedUsers = [];
+  int _connectionsCount = 0;
 
   String? get token => _token;
   User? get user => _user;
   bool get isLoggedIn => _token != null;
   List<User> get connectedUsers => _connectedUsers;
+  int get connectionsCount => _connectionsCount;
+
+  //Method to get connections count
+  Future<void> getConnectionsCount() async {
+    final response = await ConnectionRepo().getConnectionsCount(_token!);
+    _connectionsCount = response ?? 0;
+    notifyListeners();
+  }
 
   Future<void> loadToken() async {
     _token = await _storage.read(key: 'auth_token');

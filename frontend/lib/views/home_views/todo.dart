@@ -194,7 +194,10 @@ class _ToDoState extends State<ToDo> {
           Consumer<TodoProvider>(
             builder: (context, todoProvider, child) {
               if (todoProvider.isLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(
+                    child: CircularProgressIndicator(
+                  color: ColorsUtil.primaryclr,
+                ));
               }
 
               if (todoProvider.error != null) {

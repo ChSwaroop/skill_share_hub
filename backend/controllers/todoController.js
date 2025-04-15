@@ -105,6 +105,21 @@ exports.updateTodo = async (req, res) => {
     }
 };
 
+// Get the count of todos for a user
+exports.getTodoCount = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const count = await Todo.countDocuments({ user: userId });
+
+        res.status(200).json({ success: true, count });
+    } catch (error) {
+        console.error('Error counting todos:', error);
+        res.status(500).json({ success: false, error: 'Server Error' });
+    }
+};
+
+
 // Delete a todo
 exports.deleteTodo = async (req, res) => {
     try {
