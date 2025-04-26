@@ -22,7 +22,7 @@ const feedbackController = require('../controllers/feedbackController');
 const { authMiddleware } = require('../utils/authMiddleware');
 
 // Submit feedback
-router.post('/', feedbackController.createFeedback);
+router.post('/', authMiddleware, feedbackController.createFeedback);
 
 // Get all feedback (admin only)
 router.get('/', authMiddleware, feedbackController.getAllFeedback);

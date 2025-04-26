@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:skill_share_hub/colors.dart';
 import 'package:skill_share_hub/constants.dart';
+import 'package:skill_share_hub/providers/user_provider.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({Key? key}) : super(key: key);
@@ -47,10 +49,15 @@ class _FeedbackPageState extends State<FeedbackPage> {
       'comments': _commentsController.text,
     };
 
+    final authToken = Provider.of<UserProvider>(context, listen: false).token;
+
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/feedback'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          "Authorization": "Bearer $authToken",
+        },
         body: jsonEncode(feedback),
       );
 
@@ -60,6 +67,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         );
         Navigator.pop(context);
       } else {
+        debugPrint(response.body);
         throw Exception('Failed to submit feedback');
       }
     } catch (e) {
